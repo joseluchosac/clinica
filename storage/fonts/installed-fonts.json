@@ -1,0 +1,9 @@
+{
+    "sairacondensed": {
+        "normal": "sairacondensed_normal_f8724e37def80410def1a1df50250a80"
+    },
+    "agency fb": {
+        "normal": "C:\\xampp\\htdocs\\laravel\\clinica\\storage\\fonts\/agency_fb_normal_d044ab77b3d741210ba55e326357c058",
+        "bold": "agency_fb_bold_3efb55b5a9d314c32ea173acb621e111"
+    }
+}
