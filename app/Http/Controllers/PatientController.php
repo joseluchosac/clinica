@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PatientFormRequest;
 use App\Http\Requests\PatientFormStoreRequest;
+use App\Models\Identity;
 use App\Models\Location;
 use App\Models\Patient;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -20,7 +21,7 @@ class PatientController extends Controller
      */
     public function index(Request $request)
     {
-
+        $identities = Identity::select('code', 'name', 'long')->get();
         $patients = Patient::query()->with('locationAddress');
         if($request->filled('s_last_name')){
             $s_last_name = $request->s_last_name;
@@ -77,6 +78,7 @@ class PatientController extends Controller
         
         return Inertia::render('patients/index', [
             'patients' => $patients,
+            'identities' => $identities,
             // 'filters' => $request->only(['search']),
             'request_all' => $request->all(),
        
@@ -97,14 +99,20 @@ class PatientController extends Controller
      */
     public function store(PatientFormRequest $request)
     {
-        try {
+          try {
             // $patient = null;
             DB::transaction(function () use ($request, &$patient) {
-                // Bloquear la fila correspondiente a "next_nhc"
+                // Obtiene el contador siguiente y bloquea la fila correspondiente a "next_nhc"
                 $counter = DB::table('autoincrements')
                     ->where('name', 'next_nhc')
                     ->lockForUpdate()
                     ->first();
+                // verifica si el valor de $counter exista en el campo nhc de la tabla patient
+                $existeNHC = Patient::where('nhc', $counter->value)->first();
+                if($existeNHC){
+                    // lanza una excepcion
+                    throw new \Exception("Error en la autonumaración de NHC");
+                }
                 // inserta el paciente
                 $patient = Patient::create([
                     'nhc' => $counter->value,
@@ -125,20 +133,25 @@ class PatientController extends Controller
                 DB::table('autoincrements')
                     ->where('name', 'next_nhc')
                     ->update(['value' => $counter->value + 1]);
-
                     
             });
-
             session()->flash('datos', [
                 "msg" => "Paciente creado con éxito", 
                 "type" => "success",
                 "action" => "storePatient",
                 "data" => $patient
             ]);
-
             return redirect()->route('patients.index');
-        } catch (Exception $e) {
-            Log::error('Falló creación del paciente: ' . $e->getMessage());
+
+        } catch (\Exception $e) {
+            // Log::error('Falló creación del paciente: ' . $e->getMessage());
+            session()->flash('datos', [
+                "msg" => $e->getMessage(), 
+                "type" => "error",
+                "action" => "storePatient",
+                "data" => null
+            ]);
+            return redirect()->route('patients.index');
         }
     }
 
@@ -156,7 +169,8 @@ class PatientController extends Controller
     public function edit(Patient $patient)
     {
         // dd($patient->toArray());
-        return Inertia::render('patients/patient-form', compact('patient'));
+        $identities = Identity::all();
+        return Inertia::render('patients/patient-form', compact('patient', 'identities'));
     }
 
     /**

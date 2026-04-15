@@ -38,3 +38,11 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+
+// tipos personalizados
+export interface Identity {
+    code: string;
+    name: string;
+    long: number;
+}

@@ -3,6 +3,7 @@ import AsyncSelect from 'react-select/async';
 import { FieldLabel } from '../ui/field';
 import { debounce } from '@/lib/utils';
 import { useRef } from 'react';
+import { customSelectDarkStyle, customSelectLightStyle } from '@/lib/customSelectStyles';
 
 interface Location {
     id: number;
@@ -56,6 +57,7 @@ export default function LocationReactSelect({ option, label, onChange }: Locatio
 
     const isDark = document.documentElement.classList.contains('dark');
 
+
     return (
         <div>
             <FieldLabel className="mb-1">{label ?? ''}</FieldLabel>
@@ -69,30 +71,7 @@ export default function LocationReactSelect({ option, label, onChange }: Locatio
                     onChange(selectedOpt);
                 }}
                 placeholder="Buscar ubicación..."
-                styles={
-                    isDark
-                        ? {
-                              control: (base) => ({
-                                  ...base,
-                                  backgroundColor: '#111111',
-                                  color: '#f9fafb',
-                                  borderColor: '#333',
-                              }),
-                              input: (styles: any) => ({ ...styles, color: '#f9fafb' }),
-                              singleValue: (styles: any) => ({ ...styles, color: '#f9fafb' }),
-                              menuList: (base) => ({
-                                  ...base,
-                                  backgroundColor: '#374151',
-                                  color: '#f9fafb',
-                              }),
-                              menu: (base) => ({
-                                  ...base,
-                                  backgroundColor: '#374151',
-                                  color: '#f9fafb',
-                              }),
-                          }
-                        : {}
-                }
+                styles={ isDark ? customSelectDarkStyle : customSelectLightStyle }
             />
         </div>
     );

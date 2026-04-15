@@ -21,7 +21,7 @@ return new class extends Migration
 
             // Datos Personales
             $table->string('last_name', 100); // apellidos
-            $table->string('first_name', 100)->nullable(); // nombres
+            $table->string('first_name', 100); // nombres
             $table->enum('gender', ['M', 'F'])->nullable();
             $table->date('birth_date')->nullable();
             $table->integer('location_birth_id')->nullable(); // Relación a la tabla locations
@@ -29,6 +29,7 @@ return new class extends Migration
             // Contacto
             $table->string('address', 150)->nullable();
             $table->integer('location_address_id')->nullable(); // Relación a la tabla locations
+            $table->string('country_code', 4)->nullable(); // Relación a la tabla locations
             $table->string('email', 150)->nullable()->unique();
             $table->string('phone', 50)->nullable();
             

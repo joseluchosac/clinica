@@ -7,11 +7,13 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { Identity } from '@/types';
 import { useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { Printer, Save, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
 interface Patient {
     id: string;
     nhc: string;
@@ -33,6 +35,7 @@ interface Patient {
 
 interface PatientFormProps {
     patientId: number | null;
+    identities: Identity[];
     onClose: () => void;
 }
 
@@ -59,7 +62,8 @@ const initForm: Patient = {
     email: '',
     phone: '',
 };
-export default function PatientForm({ patientId, onClose }: PatientFormProps) {
+
+export default function PatientForm({ patientId, identities, onClose }: PatientFormProps) {
     
     const [loading, setLoading] = useState(false);
     const form = useForm(initForm);
@@ -211,14 +215,25 @@ export default function PatientForm({ patientId, onClose }: PatientFormProps) {
                         </div>
                         <FieldGroup className="gap-3">
                             <div className="grid gap-4 lg:grid-cols-4">
+                                {/* NHC */}
                                 <Field className="gap-1">
                                     <FieldLabel htmlFor="nhc">NHC</FieldLabel>
-                                    <Input id="nhc" name="nhc" disabled value={form.data.nhc} placeholder="Autogenerado" />
+                                    <Input
+                                        style={{fontSize: '1.1rem'}}
+                                        className='font-bold'
+                                        id="nhc" 
+                                        name="nhc" 
+                                        disabled 
+                                        value={form.data.nhc} 
+                                        placeholder="Autogenerado" 
+                                    />
                                 </Field>
+                                {/* FECHA DE INGRESO */}
                                 <Field className="gap-1">
                                     <FieldLabel htmlFor="entry_at">Fecha ingreso</FieldLabel>
                                     <Input id="entry_at" name="entry_at" disabled value={form.data.entry_at} placeholder="Autogenerado" />
                                 </Field>
+                                {/* TIPO DE DOCUMENTO */}
                                 <Field className="gap-1">
                                     <FieldLabel htmlFor="identity_code">Tipo de documento</FieldLabel>
                                     <Select
@@ -231,17 +246,17 @@ export default function PatientForm({ patientId, onClose }: PatientFormProps) {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
-                                                <SelectItem value="00">Otros</SelectItem>
-                                                <SelectItem value="01">DNI</SelectItem>
-                                                <SelectItem value="04">Carnet ext</SelectItem>
-                                                <SelectItem value="06">RUC</SelectItem>
-                                                <SelectItem value="07">Pasaporte</SelectItem>
-                                                <SelectItem value="11">Part Nac.</SelectItem>
+                                                {identities.map((identity) => (
+                                                    <SelectItem key={identity.code} value={identity.code}>
+                                                        {identity.name}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
                                     <InputError message={form.errors.identity_code} />
                                 </Field>
+                                {/* NRO DE DOCUMENTO */}
                                 <Field className="gap-1">
                                     <FieldLabel htmlFor="identity_number">Nro. de documento</FieldLabel>
                                     <Input
@@ -255,38 +270,44 @@ export default function PatientForm({ patientId, onClose }: PatientFormProps) {
                                 </Field>
                             </div>
                             <div className="grid gap-4 lg:grid-cols-2">
+                                {/* APELLIDOS */}
                                 <Field className="gap-1">
                                     <FieldLabel htmlFor="last_name">Apellidos</FieldLabel>
                                     <Input
-                                        className={form.errors.last_name ? 'border border-red-400' : ''}
+                                        style={{fontSize: '1.1rem'}}
+                                        className={`uppercase ${form.errors.last_name ? 'border border-red-400' : ''}`}
                                         name="last_name"
                                         value={form.data.last_name}
-                                        onChange={(e) => form.setData({ ...form.data, last_name: e.target.value })}
+                                        onChange={(e) => form.setData({ ...form.data, last_name: e.target.value.toUpperCase() })}
                                     />
                                     <InputError message={form.errors.last_name} />
                                 </Field>
+                                {/* NOMBRES */}
                                 <Field className="gap-1">
                                     <FieldLabel htmlFor="first_name">Nombres</FieldLabel>
                                     <Input
-                                        className={form.errors.first_name ? 'border border-red-400' : ''}
+                                        style={{fontSize: '1.1rem'}}
+                                        className={`uppercase ${form.errors.first_name ? 'border border-red-400' : ''}`}
                                         name="first_name"
                                         value={form.data.first_name}
-                                        onChange={(e) => form.setData({ ...form.data, first_name: e.target.value })}
+                                        onChange={(e) => form.setData({ ...form.data, first_name: e.target.value.toUpperCase() })}
                                     />
                                     <InputError message={form.errors.first_name} />
                                 </Field>
                             </div>
                             <div className="grid gap-4 lg:grid-cols-12">
+                                {/* SEXO */}
                                 <Field className="gap-1 lg:col-span-2">
                                     <FieldLabel htmlFor="gender">Sexo</FieldLabel>
                                     <Input
-                                        className={form.errors.gender ? 'border border-red-400' : ''}
+                                        className={`uppercase ${form.errors.gender ? 'border border-red-400' : ''}`}
                                         name="gender"
                                         value={form.data.gender}
-                                        onChange={(e) => form.setData({ ...form.data, gender: e.target.value })}
+                                        onChange={(e) => form.setData({ ...form.data, gender: e.target.value.toUpperCase() })}
                                     />
                                     <InputError message={form.errors.gender} />
                                 </Field>
+                                {/* FECHA DE NACIMIENTO */}
                                 <Field className="gap-1 lg:col-span-3">
                                     <FieldLabel htmlFor="birth_date">Fecha de nacimiento</FieldLabel>
                                     <Input
@@ -297,6 +318,7 @@ export default function PatientForm({ patientId, onClose }: PatientFormProps) {
                                     />
                                     <InputError message={form.errors.birth_date} />
                                 </Field>
+                                {/* LUGAR DE NACIMIENTO */}
                                 <Field className="gap-1 lg:col-span-7">
                                     <LocationReactSelect
                                         label="Ubicación de nacimiento"
@@ -311,11 +333,17 @@ export default function PatientForm({ patientId, onClose }: PatientFormProps) {
                                 </Field>
                             </div>
                             <div className="grid gap-4 lg:grid-cols-12">
+                                {/* DIRECCION */}
                                 <Field className="gap-1 lg:col-span-6">
                                     <FieldLabel htmlFor="address">Dirección</FieldLabel>
-                                    <Input name="address" value={form.data.address} onChange={(e) => form.setData({ ...form.data, address: e.target.value })} />
+                                    <Input
+                                        className='uppercase'
+                                        name="address" 
+                                        value={form.data.address} onChange={(e) => form.setData({ ...form.data, address: e.target.value.toUpperCase() })} 
+                                    />
                                     <InputError message={form.errors.address} />
                                 </Field>
+                                {/* LUGAR DE DIRECCION */}
                                 <Field className="gap-1 lg:col-span-6">
                                     <LocationReactSelect
                                         label="Ubicación de dirección"
@@ -329,9 +357,8 @@ export default function PatientForm({ patientId, onClose }: PatientFormProps) {
                                     />
                                 </Field>
                             </div>
-
-
                             <div className="grid gap-4 lg:grid-cols-2">
+                                {/* CORREO ELECTRONICO*/}
                                 <Field className="gap-1">
                                     <FieldLabel htmlFor="email">Correo electrónico</FieldLabel>
                                     <Input
@@ -343,6 +370,7 @@ export default function PatientForm({ patientId, onClose }: PatientFormProps) {
                                     />
                                     <InputError message={form.errors.email} />
                                 </Field>
+                                {/* TELEFONO */}
                                 <Field className="gap-1">
                                     <FieldLabel htmlFor="phone">Teléfono</FieldLabel>
                                     <Input name="phone" value={form.data.phone} onChange={(e) => form.setData({ ...form.data, phone: e.target.value })} />

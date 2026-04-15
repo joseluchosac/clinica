@@ -6,7 +6,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, Identity } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { CircleCheck, CirclePlus, CircleX, Ellipsis, EllipsisVertical, Pencil, Printer, RotateCcw, Search, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import PatientForm from './patient-form';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { limpiarObjeto } from '@/lib/utils';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -27,6 +28,7 @@ interface LinkProps {
     label: string;
     url: string;
 }
+
 interface PatientItem {
     id: number | null;
     nhc: string;
@@ -49,12 +51,14 @@ interface PatientPagination {
     total: number;
     per_page: number;
 }
+
 interface FilterProps {
     search: string;
 }
 
 interface IndexProps {
     patients: PatientPagination;
+    identities: Identity[];
     filters: FilterProps;
     request_all: {
         s_last_name: string;
@@ -70,7 +74,7 @@ interface Actions {
     data: any;
 }
 
-export default function Index({ patients, request_all }: IndexProps) {
+export default function Index({ patients, identities, request_all }: IndexProps) {
     const [mode, setMode] = useState('table');
     const { flash } = usePage<{ flash?: { success?: string; error?: string; datos?: any } }>().props;
     const [openSearch, setOpenSearch] = useState(false);
@@ -88,16 +92,6 @@ export default function Index({ patients, request_all }: IndexProps) {
     const formPatient = useForm();
     const formDebug = useForm({value: 0});
 
-    function limpiarObjeto<T extends Record<string, any>>(obj: T): Partial<T> {
-        const resultado: Partial<T> = {};
-        for (const [key, value] of Object.entries(obj)) {
-            if (value !== null && value !== '' && value !== undefined) {
-                (resultado as any)[key] = value;
-            }
-        }
-        return resultado;
-    }
-
     const handleSubmitFilter = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setOpenSearch(false);
@@ -108,7 +102,7 @@ export default function Index({ patients, request_all }: IndexProps) {
         });
     };
 
-    const handleLimpiar = () => {
+    const resetFilter = () => {
         formFilter.setData({
             s_last_name: '',
             s_first_name: '',
@@ -116,10 +110,9 @@ export default function Index({ patients, request_all }: IndexProps) {
             s_identity_number: '',
             s_birth_date: '',
         });
-        // const queryString = limpiarObjeto(formSearch);
         router.get(
             route('patients.index'),
-            {},
+            {}, // request payload
             {
                 preserveScroll: true,
                 preserveState: true,
@@ -138,8 +131,6 @@ export default function Index({ patients, request_all }: IndexProps) {
         formDebug.setData({value: value})
         setAction({ type: 'debug', data: id });
         setOpenConfirm(true);
-        // formDebug.put(route('patients.update.debug-hc', id))
-        // console.log(formDebug.data)
     }
 
     const executeAction = () => {
@@ -188,16 +179,22 @@ export default function Index({ patients, request_all }: IndexProps) {
     };
 
     useEffect(() => {
+        // console.log(flash)
         if (flash?.datos?.action == 'storePatient') {
-            toast.success('Paciente registrado correctamente');
-            setPatientId(flash?.datos?.data?.id || null);
+            if(flash?.datos?.type == 'success'){
+                toast.success('Paciente registrado correctamente');
+                setPatientId(flash?.datos?.data?.id || null);
+            }else if(flash?.datos?.type == 'error'){
+                toast.error(flash?.datos?.msg);
+                setPatientId(flash?.datos?.data?.id || null);
+            }
         }
         if (flash?.datos?.action == 'destroyPatient') {
             toast.success('Paciente eliminado correctamente');
             // setPatientId(flash?.datos?.data?.id || null);
         }
     }, [flash]);
-
+    
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Pacientes" />
@@ -212,9 +209,10 @@ export default function Index({ patients, request_all }: IndexProps) {
             {/* SECCION TABLA */}
             <div className={`flex flex-col gap-2 rounded-xl px-4 pt-4 pb-2 h-[calc(100vh-80px)] ${mode === 'table' ? '' : 'hidden'}`}>
                 <div className="flex justify-end gap-4 py-2">
-                    <Button variant="outline" onClick={handleLimpiar}>
+                    <Button variant="outline" onClick={resetFilter}>
                         <RotateCcw /> reset
                     </Button>
+                    {/* SECCION FILTRADO */}
                     <Sheet open={openSearch} onOpenChange={setOpenSearch}>
                         <SheetTrigger asChild>
                             <Button variant="outline" onClick={() => setOpenSearch(true)}>
@@ -276,7 +274,7 @@ export default function Index({ patients, request_all }: IndexProps) {
                                     </Field>
                                 </FieldGroup>
                                 <div className="mt-2 flex justify-center gap-4">
-                                    <Button type="button" variant="outline" onClick={handleLimpiar}>
+                                    <Button type="button" variant="outline" onClick={resetFilter}>
                                         Limpiar
                                     </Button>
                                     <Button type="submit">Filtrar</Button>
@@ -284,6 +282,7 @@ export default function Index({ patients, request_all }: IndexProps) {
                             </form>
                         </SheetContent>
                     </Sheet>
+
                     <Button
                         onClick={() => {
                             setPatientId(null);
@@ -293,19 +292,20 @@ export default function Index({ patients, request_all }: IndexProps) {
                         <CirclePlus /> Nuevo paciente
                     </Button>
                 </div>
+
                 <div className='grow overflow-hidden'>
                     <ScrollArea className='h-full border rounded-md'>
                         <Table>
-                            <TableHeader>
+                            <TableHeader className="bg-blue-600">
                                 <TableRow>
                                     <TableHead className='p-2'></TableHead>
-                                    <TableHead className='px-6'>NHC</TableHead>
-                                    <TableHead className='p-2'>APELLIDOS</TableHead>
-                                    <TableHead className='p-2'>NOMBRES</TableHead>
-                                    <TableHead className='p-2'>DOC IDENTIDAD</TableHead>
-                                    <TableHead className='p-2'>F NAC</TableHead>
-                                    <TableHead className='p-2'>DIRECCION</TableHead>
-                                    <TableHead className='p-2'>F ING</TableHead>
+                                    <TableHead className='px-6 text-blue-100'>NHC</TableHead>
+                                    <TableHead className='p-2 text-blue-100'>APELLIDOS</TableHead>
+                                    <TableHead className='p-2 text-blue-100'>NOMBRES</TableHead>
+                                    <TableHead className='p-2 text-blue-100'>DOC IDENTIDAD</TableHead>
+                                    <TableHead className='p-2 text-blue-100'>F NAC</TableHead>
+                                    <TableHead className='p-2 text-blue-100'>DIRECCION</TableHead>
+                                    <TableHead className='p-2 text-blue-100'>F ING</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody className='text-[0.85rem]'>
@@ -381,7 +381,7 @@ export default function Index({ patients, request_all }: IndexProps) {
                                             </TableCell>
                                             <TableCell className='px-2 py-1'>
                                                 <Button
-                                                    className='text-[0.85rem] text-blue-800 dark:text-blue-300 cursor-pointer'
+                                                    className='text-[0.85rem] text-blue-800 dark:text-blue-300 cursor-pointer font-bold tracking-wider'
                                                     variant='ghost'
                                                     size='sm'
                                                     onClick={() => {
@@ -395,7 +395,7 @@ export default function Index({ patients, request_all }: IndexProps) {
                                             <TableCell className='text-nowrap px-2 py-1'>{patient.last_name}</TableCell>
                                             <TableCell className='text-nowrap px-2 py-1'>{patient.first_name}</TableCell>
                                             <TableCell className='text-nowrap px-2 py-1'>
-                                                {patient.identity_name} {patient.identity_number}
+                                                   {patient.identity_number} <small>{patient.identity_name ? '(' + patient.identity_name + ')' : ''}</small>
                                             </TableCell>
                                             <TableCell className='text-nowrap px-2 py-1'>{patient.birth_date}</TableCell>
                                             <TableCell className='px-2 py-1'>
@@ -425,7 +425,7 @@ export default function Index({ patients, request_all }: IndexProps) {
 
             {/* SECCION FORMULARIO */}
             <div className={`flex flex-col h-full gap-4 rounded-xl p-4 ${mode === 'form' ? '' : 'hidden'}`}>
-                {mode === 'form' && <PatientForm patientId={patientId} onClose={() => setMode('table')} />}
+                {mode === 'form' && <PatientForm patientId={patientId} identities={identities} onClose={() => setMode('table')} />}
             </div>
             
             <ConfirmDialog

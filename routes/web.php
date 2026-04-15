@@ -16,6 +16,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
 
     Route::resource("users", UserController::class);
+    
     Route::resource("patients", PatientController::class);
     Route::get('patients/data/{patient}',[PatientController::class, 'data'])->name('patients.data');
     Route::put('patients/debug-hc/{patient}',[PatientController::class, 'updateDebugHc'])->name('patients.update.debug-hc');
