@@ -218,18 +218,17 @@ class PatientController extends Controller
 
     public function hcClasica(string $id)
     {
+        $HC_bulky = [0, 0, 609.5, 935]; // 21.5 x 33cm
         $patient = Patient::with(['locationAddress', 'locationBirth', 'identity'])->find($id);
-        // dd($patient->toArray());
         $arreglo = $patient->toArray();
-        // dd($arreglo);
         // Retorna un PDF que el navegador mostrará o descargará
-        $pdf = Pdf::loadView('pdf.hc-clasica', ['patient' => $arreglo]);
+        $pdf = Pdf::loadView('pdf.hc-clasica', ['patient' => $arreglo])
+            ->setPaper($HC_bulky, 'portrait');
         return $pdf->stream('hc_clasica_' . $patient->nhc . '.pdf');
     }
 
     public function hojaIdentificacion(string $id)
     {
-    
         $patient = Patient::with(['locationAddress', 'locationBirth', 'identity'])->find($id);
         $arreglo = $patient->toArray();
         // Retorna un PDF que el navegador mostrará o descargará

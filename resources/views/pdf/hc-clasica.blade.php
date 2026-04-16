@@ -17,7 +17,7 @@
           width: 13cm;  /*Variar para tamaño de hoja width = height*/
           height: 13cm; /*Variar para tamaño de hoja*/
           margin-left: -20px;
-          margin-top: -20px; /*Variar para hoja oficio*/
+          margin-top: 20px; /*Variar para hoja oficio*/
           transform: rotate(-90deg)
         }
 
