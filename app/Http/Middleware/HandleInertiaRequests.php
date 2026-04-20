@@ -63,9 +63,7 @@ class HandleInertiaRequests extends Middleware
             ],
             // nuevo agredado del tutorial Laravel 12 + React Just Changed Everything! indi
             'flash' => [
-                'success' => $request->session()->get('success'),
-                'error' => $request->session()->get('error'),
-                'datos' => $request->session()->get('datos'),
+                'resp' => $request->session()->get('resp'),
             ],
         ]);
     }

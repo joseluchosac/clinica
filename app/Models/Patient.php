@@ -18,7 +18,6 @@ class Patient extends BaseModel
         'location_birth_id',
         'address',
         'location_address_id',
-        'email',
         'phone',
         'debugged',
         'status',

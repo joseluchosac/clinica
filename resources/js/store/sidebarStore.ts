@@ -40,23 +40,23 @@ const mainNavItemsInit: NavItem[] = [
                 title: 'Depuraciones',
                 url: '/archive/debuggs',
             },
+            {
+                title: 'Actualizaciones',
+                url: '/archive/updates',
+            },
         ]
     },
     {
-        title: 'Admision',
-        url: '/admission',
+        title: 'Administración',
+        url: '/admin',
         icon: LayoutGrid,
         isActive: false,
         isOpen: false,
         items: [
             {
-                title: 'Registro de datos',
-                url: '/admission/register',
+                title: 'Usuarios',
+                url: '/admin/users',
             },
-            {
-                title: 'Informes',
-                url: '/informes'
-            }
         ]
     },
 ];

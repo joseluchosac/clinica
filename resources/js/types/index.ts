@@ -54,3 +54,7 @@ export interface Identity {
     name: string;
     long: number;
 }
+
+export interface Flash {
+    resp?: any;
+}

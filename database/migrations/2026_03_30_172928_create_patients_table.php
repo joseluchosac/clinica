@@ -29,15 +29,13 @@ return new class extends Migration
             // Contacto
             $table->string('address', 150)->nullable();
             $table->integer('location_address_id')->nullable(); // Relación a la tabla locations
-            $table->string('country_code', 4)->nullable(); // Relación a la tabla locations
-            $table->string('email', 150)->nullable()->unique();
             $table->string('phone', 50)->nullable();
             
             // Degub
             $table->tinyInteger('debugged')->default(0)->nullable();
 
             // Estado y Tiempos
-            $table->tinyInteger('status')->default(1)->comment('1:Active, 0:Inactive');
+            $table->tinyInteger('state')->default(1)->comment('1:Active, 0:Inactive');
             $table->timestamps();
 
             // Índices Compuestos y Únicos
@@ -46,7 +44,6 @@ return new class extends Migration
             $table->index(['first_name'], 'idx_first_name');
             $table->index(['identity_number'], 'idx_identity_number');
             $table->index(['birth_date'], 'idx_birth_date');
-            $table->index(['email'], 'idx_email');
         });
     }
 
