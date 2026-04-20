@@ -58,3 +58,19 @@ export interface Identity {
 export interface Flash {
     resp?: any;
 }
+
+export interface PatientItem {
+  id: number | null;
+  nhc: string;
+  last_name: string;
+  first_name: string;
+  identity_name: string;
+  identity_number: string;
+  birth_date: string;
+  address: string;
+  location_address_name: string;
+  entry_at: string;
+  debugged: number;
+  created_at: string;
+  updated_at: string;
+}
