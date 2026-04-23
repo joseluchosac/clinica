@@ -53,7 +53,18 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'username' => $request->user()->username,
+                    'email' => $request->user()->email,
+                    'email_verified_at' => $request->user()->emailVerified,
+                    'created_at' => $request->user()->created_at,
+                    'updated_at' => $request->user()->updated_at,
+                    'can' => $request->user()
+                        ? $request->user()->getPermissionsViaRoles()->pluck('name')->mapWithKeys(fn($permission)=>[$permission => true])->all()
+                        : [],
+                ] : null
             ],
             'locale' => $locale,
             'translations' => $translations,
@@ -67,4 +78,39 @@ class HandleInertiaRequests extends Middleware
             ],
         ]);
     }
+
+
+    // CODE BACKUP
+    // public function share(Request $request): array
+    // {
+    //     [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+
+    //     // Obtener el idioma actual
+    //     $locale = app()->currentLocale();
+        
+    //     // Cargar el archivo JSON de traducciones
+    //     $langFile = base_path("lang/{$locale}.json");
+    //     $translations = File::exists($langFile) 
+    //         ? json_decode(File::get($langFile), true) 
+    //         : [];
+            
+    //     return array_merge(parent::share($request), [
+    //         ...parent::share($request),
+    //         'name' => config('app.name'),
+    //         'quote' => ['message' => trim($message), 'author' => trim($author)],
+    //         'auth' => [
+    //             'user' => $request->user(),
+    //         ],
+    //         'locale' => $locale,
+    //         'translations' => $translations,
+    //         'locales' => [
+    //             'es' => 'Español',
+    //             'en' => 'English',
+    //         ],
+    //         // nuevo agredado del tutorial Laravel 12 + React Just Changed Everything! indi
+    //         'flash' => [
+    //             'resp' => $request->session()->get('resp'),
+    //         ],
+    //     ]);
+    // }
 }

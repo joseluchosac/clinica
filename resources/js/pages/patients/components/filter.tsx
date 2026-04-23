@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Search } from "lucide-react";
 import { InertiaFormProps } from "node_modules/@inertiajs/react/types/useForm";
@@ -15,6 +16,8 @@ interface FilterProps {
     s_nhc: string;
     s_identity_number: string;
     s_birth_date: string;
+    o_field: string;
+    o_direction: string;
   }>;
   handleSubmitFilter: (e: FormEvent<HTMLFormElement>) => void;
   resetFilter: () => void
@@ -81,6 +84,50 @@ export default function Filter({ openSearch, setOpenSearch, formFilter, handleSu
                 value={formFilter.data.s_birth_date}
                 onChange={(e) => formFilter.setData({ ...formFilter.data, s_birth_date: e.target.value })}
               />
+            </Field>
+            <Field className="gap-1">
+              <FieldLabel>Ordenar por</FieldLabel>
+              <Select
+                value={formFilter.data.o_field}
+                onValueChange={(value) => {
+                  console.log(value)
+                  formFilter.setData({ ...formFilter.data, o_field: value, o_direction: ' ' }) // espacio para que no tome el valor por defecto del backend
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder=""/>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value=" ">Por defecto</SelectItem> {/* espacio para que no tome el valor por defecto del backend */}
+                    <SelectItem value="nhc">NHC</SelectItem>
+                    <SelectItem value="last_name">Apellidos</SelectItem>
+                    <SelectItem value="first_name">Nombres</SelectItem>
+                    <SelectItem value="birth_date">Fecha de nacimiento</SelectItem>
+                    {/* <SelectItem value="created_at">Fecha de creación</SelectItem> */}
+                    <SelectItem value="entry_at">Fecha de ingreso</SelectItem>
+                    <SelectItem value="updated_at">Fecha de actualización</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field className="gap-1">
+              <FieldLabel>Dirección</FieldLabel>
+              <Select
+                disabled={!formFilter.data.o_field.trim()}
+                value={formFilter.data.o_direction}
+                onValueChange={(value) => formFilter.setData({ ...formFilter.data, o_direction: value })}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="desc" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value=" ">Ascendente</SelectItem> {/* espacio para que no tome el valor por defecto del backend */}
+                    <SelectItem value="desc">Descendente</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </Field>
           </FieldGroup>
           <div className="mt-2 flex justify-center gap-4">

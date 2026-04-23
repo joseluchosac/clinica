@@ -16,23 +16,28 @@ class UserController extends Controller
    */
   public function index(Request $request)
   {
+    $users = User::query()->with('roles');
 
-    $users = User::query();
-    $users = $users->paginate(10);
+    if($request->has('search') && $request->search) {
+      $users->where(function($query) use ($request) {
+        $query->where('name', 'like', '%' . $request->search . '%')
+              ->orWhere('username', 'like', '%' . $request->search . '%')
+              ->orWhere('email', 'like', '%' . $request->search . '%');
+      });
+    }
+    $users = $users->paginate(20)->withQueryString();
     $users->getCollection()->transform(fn($user) => [
       'id' => $user->id,
       'username' => $user->username,
       'email' => $user->email,
       'name' => $user->name,
+      'roles' => $user->roles,
       'created_at' => $user->created_at?->format('Y-m-d H:i:s'),
       'updated_at' => $user->updated_at?->format('Y-m-d H:i:s'),
     ]);
-    // $users = User::query()
-    //     ->orderBy('name')
-    //     ->get(['id', 'name', 'username', 'email', 'created_at', 'updated_at']);
-
     return Inertia::render('admin/users/index', [
       'users' => $users,
+      'filters' => $request->only(['search']),
     ]);
   }
 
@@ -53,14 +58,15 @@ class UserController extends Controller
       'name' => 'required|string|max:255',
       'username' => 'required|string|max:255|unique:users',
       'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-      'password' => ['required', 'confirmed', Rules\Password::defaults()],
+      // 'password' => ['required', 'confirmed', Rules\Password::defaults()],
     ]);
 
     User::create([
       'name' => $request->name,
       'username' => $request->username,
       'email' => $request->email,
-      'password' => Hash::make($request->password),
+      // 'password' => Hash::make($request->password),
+      'password' => Hash::make('12345678'),
     ]);
 
     session()->flash('resp', [
@@ -121,6 +127,18 @@ class UserController extends Controller
       "type" => "success",
       "action" => "destroyUser",
       "data" => $user
+    ]);
+    return redirect()->route('admin.users.index');
+  }
+
+  public function resetPsw(User $user)
+  {
+    $user->update(['password' => Hash::make('12345678')]);
+    session()->flash('resp', [
+      "msg" => "Password reseteada con éxito",
+      "type" => "success",
+      "action" => "resetPasswordUser",
+      "data" => null
     ]);
     return redirect()->route('admin.users.index');
   }

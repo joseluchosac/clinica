@@ -9,26 +9,26 @@ export interface BreadcrumbItem {
     href: string;
 }
 
-export interface NavGroup {
-    title: string;
-    items: NavItem[];
-}
-
-export interface NavSubItem {
-    title: string;
-    url: string;
-    icon?: LucideIcon | null;
-    isActive?: boolean;
-}
 export interface NavItem {
     title: string;
     url: string;
     icon?: LucideIcon | null;
     isActive?: boolean;
     isOpen?: boolean;
-    items?: NavSubItem[] | null;
+    can: string[] | null;
+    subItems?: NavSubItem[] | null;
 }
-
+export interface NavSubItem {
+    title: string;
+    url: string;
+    icon?: LucideIcon | null;
+    isActive?: boolean;
+    can: string[] | null;
+}
+export interface NavGroup {
+    title: string;
+    items: NavItem[];
+}
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
@@ -38,27 +38,42 @@ export interface SharedData {
 
 export interface User {
     id: number;
+    username: string;
     name: string;
     email: string;
     avatar?: string;
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
+    roles?: Role[];
+    can: Record<string, boolean>;
     [key: string]: unknown; // This allows for additional properties...
 }
-
-
-// tipos personalizados
+// tipos personalizados para permissions
+export interface Role {
+    id: number;
+    name: string;
+    guard_name: string;
+    created_at: string;
+    updated_at: string;
+    permissions?: Permission[];
+}
+export interface Permission {
+    id: number;
+    name: string;
+    guard_name: string;
+    created_at: string;
+    updated_at: string;
+    roles?: Role[]
+}
 export interface Identity {
     code: string;
     name: string;
     long: number;
 }
-
 export interface Flash {
     resp?: any;
 }
-
 export interface PatientItem {
   id: number | null;
   nhc: string;

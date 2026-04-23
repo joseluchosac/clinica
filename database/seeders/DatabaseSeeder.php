@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Autoincrement;
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -19,20 +18,10 @@ class DatabaseSeeder extends Seeder
             IdentitySeeder::class,
             LocationSeeder::class,
             CountrySeeder::class,
+            RoleUserSeeder::class,
         ]);
 
-        User::create([
-           'name' => 'José Luis',
-           'username' => 'jose',
-           'email' => 'josvelsac@gmail.com',
-           'password' => bcrypt(12345678)
-        ]);
-        User::create([
-           'name' => 'Admin',
-           'username' => 'admin',
-           'email' => 'admin@gmail.com',
-           'password' => bcrypt(12345678)
-        ]);
+
 
         Autoincrement::create([
             'name' => 'next_nhc',

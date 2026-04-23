@@ -5,19 +5,20 @@ import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
+import { dialogConfirmInit } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Save, X } from 'lucide-react';
+import { KeySquare, RotateCcw, RotateCcwIcon, Save, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface Form {
-  id: number;
+  id: number | null;
   name: string;
   username: string;
   email: string;
-  password: string;
-  password_confirmation: string;
+  // password: string;
+  // password_confirmation: string;
 }
 
 interface User {
@@ -28,7 +29,7 @@ interface User {
 }
 
 interface Actions {
-  type: 'create' | 'update' | 'delete' | null;
+  type: 'create' | 'update' | 'delete' | 'reset-psw' | null;
   data: any;
 }
 const breadcrumbs: BreadcrumbItem[] = [
@@ -43,28 +44,48 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const formInit: Form = {
-  id: 0,
+  id: null,
   name: '',
   username: '',
   email: '',
-  password: '',
-  password_confirmation: '',
 };
 
 export default function UserForm({ ...props }: { user: User | undefined }) {
   const { user } = props;
-  const [openConfirm, setOpenConfirm] = useState(false);
+  const [dialogConfirm, setDialogConfirm] = useState(dialogConfirmInit);
   const [action, setAction] = useState<Actions | null>(null);
   const form = useForm(formInit);
+  const formResetPsw = useForm({id: ''});
 
-  const submit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (form.data.id) {
       setAction({ type: 'update', data: form.data.id });
+      setDialogConfirm({
+        ...dialogConfirm,
+        open: true,
+        title: '¿Actualizar usuario?',
+        description: '¿Deseas actualizar los datos de este usuario?'
+      });
     } else {
       setAction({ type: 'create', data: null });
+      setDialogConfirm({
+        ...dialogConfirm,
+        open: true,
+        title: '¿Registrar nuevo usuario?',
+        description: '¿Deseas registrar este nuevo usuario?'
+      });
     }
-    setOpenConfirm(true);
+  };
+
+  const handleResetPassword = () => {
+    setAction({ type: 'reset-psw', data: form.data.id });
+      setDialogConfirm({
+        ...dialogConfirm,
+        open: true,
+        title: '¿Resetear contraseña?',
+        description: '¿Deseas resetear la contraseña de este usuario? La nueva contraseña será "123456789"?'
+      });
   };
 
   const executeAction = () => {
@@ -80,7 +101,14 @@ export default function UserForm({ ...props }: { user: User | undefined }) {
           toast.error('Error al registrar el usuario');
         },
       });
+    } else if (action?.type === 'reset-psw') {
+      formResetPsw.post(route('admin.users.reset-psw', action.data), {
+        onError: () => {
+          toast.error('Error al resetear la contraseña');
+        },
+      });
     }
+    setDialogConfirm({ ...dialogConfirm, open: false });
   };
 
   useEffect(() => {
@@ -101,31 +129,41 @@ export default function UserForm({ ...props }: { user: User | undefined }) {
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
         <Card>
           <CardContent>
-            <form onSubmit={submit}>
-              <div className="flex items-center justify-between">
+            <form onSubmit={handleSubmit}>
+              <div className="flex flex-col items-center gap-4 my-4 md:flex-row md:justify-between">
                 <CardTitle>{form.data.id ? 'Actualizar usuario' : 'Nuevo usuario'}</CardTitle>
-                <div className="mt-2 flex items-center justify-end gap-4">
+                <div className="flex gap-2">
                   <Button asChild variant="outline">
                     <Link href={route('admin.users.index')}>
                       <X />
                       Cerrar
                     </Link>
                   </Button>
+                  {form.data.id && (
+                    <Button
+                      variant='outline'
+                      type="button"
+                      // disabled={form.processing || !form.isDirty}
+                      onClick={handleResetPassword}
+                    >
+                      <KeySquare /> Resetear password
+                    </Button>
+                  )}
                   <Button
                     type="submit"
-                  // disabled={form.processing || !form.isDirty}
+                    disabled={form.processing || !form.isDirty}
                   >
-                    <Save /> {/* {patientId ? 'Actualizar' : 'Guardar'} */} Guardar
+                    <Save /> {form.data.id ? 'Actualizar' : 'Guardar'}
                   </Button>
                 </div>
               </div>
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="name">Nombre completo</FieldLabel>
+                  <FieldLabel htmlFor="name">Nombres</FieldLabel>
                   <Input
                     id="name"
                     name="name"
-                    placeholder="Ej. Juan Perez"
+                    placeholder="Apellidos y nombres: Ej. Juan Perez"
                     value={form.data.name}
                     onChange={(e) => form.setData('name', e.target.value)}
                   />
@@ -154,44 +192,18 @@ export default function UserForm({ ...props }: { user: User | undefined }) {
                   />
                   <InputError message={form.errors.email} />
                 </Field>
-                <Field>
-                  <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={form.data.password}
-                    onChange={(e) => form.setData('password', e.target.value)}
-                  />
-                  <InputError message={form.errors.password} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="password_confirmation">Confirmar contraseña</FieldLabel>
-                  <Input
-                    id="password_confirmation"
-                    name="password_confirmation"
-                    type="password"
-                    value={form.data.password_confirmation}
-                    onChange={(e) => form.setData('password_confirmation', e.target.value)}
-                  />
-                  <InputError message={form.errors.password_confirmation} />
-                </Field>
               </FieldGroup>
             </form>
           </CardContent>
         </Card>
         <ConfirmDialog
-          open={openConfirm}
-          onOpenChange={setOpenConfirm}
-          title="¿Confirmar acción?"
-          description={
-            action?.type === 'delete'
-              ? 'Esta acción no se puede deshacer. ¿Seguro que deseas eliminar?'
-              : '¿Deseas confirmar esta operación?'
-          }
+          open={dialogConfirm.open}
+          onOpenChange={ (open) => setDialogConfirm({ ...dialogConfirm, open }) }
+          title={dialogConfirm.title}
+          description={dialogConfirm.description}
           onConfirm={executeAction}
-          confirmText="Sí, continuar"
-          cancelText="Cancelar"
+          confirmText={dialogConfirm.confirmText}
+          cancelText={dialogConfirm.cancelText}
         />
       </div>
     </AppLayout>

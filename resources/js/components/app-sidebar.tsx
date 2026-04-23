@@ -8,6 +8,7 @@ import { LayoutGrid, UsersRound } from 'lucide-react';
 import AppLogo from './app-logo';
 import { useEffect, useState } from 'react';
 import { useSidebarStore } from '@/store/sidebarStore';
+import { useCan } from '@/hooks/use-can';
 
 // const mainNavItemsInit: NavItem[] = [
 //     {
@@ -25,40 +26,6 @@ import { useSidebarStore } from '@/store/sidebarStore';
 //         isActive: false,
 //         isOpen: false,
 //         items: null,
-//     },
-//     {
-//         title: 'Archivo',
-//         url: '/archive',
-//         icon: LayoutGrid,
-//         isActive: false,
-//         isOpen: false,
-//         items: [
-//             {
-//                 title: 'Movimientos',
-//                 url: '/archive/movements'
-//             },
-//             {
-//                 title: 'Depuraciones',
-//                 url: '/archive/debuggs',
-//             },
-//         ]
-//     },
-//     {
-//         title: 'Admision',
-//         url: '/admission',
-//         icon: LayoutGrid,
-//         isActive: false,
-//         isOpen: false,
-//         items: [
-//             {
-//                 title: 'Toma de datos',
-//                 url: '/toma_datos',
-//             },
-//             {
-//                 title: 'Informes',
-//                 url: '/informes'
-//             }
-//         ]
 //     },
 // ];
 
@@ -79,6 +46,7 @@ export function AppSidebar() {
     // const [mainNavItems, setMainNavItems] = useState(mainNavItemsInit);
     const mainNavItems = useSidebarStore(state => state.mainNavItems);
     const setMainNavItems = useSidebarStore(state => state.setMainNavItems);
+    const can = useCan()
     const {url} = usePage();
     const currentPage =  url?.split('?')[0];
     // console.log(currentPage)
@@ -92,7 +60,7 @@ export function AppSidebar() {
         });
         setMainNavItems(newMainNavItems);
     };
-
+    
     useEffect(()=>{
         const newMainNavItems = mainNavItems.map((mainNavItem) => {
             if (currentPage.startsWith(mainNavItem.url)) {

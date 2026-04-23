@@ -7,6 +7,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { dialogConfirmInit } from '@/lib/utils';
 import { Identity } from '@/types';
 import { useForm, } from '@inertiajs/react';
 import axios from 'axios';
@@ -30,6 +31,7 @@ interface Patient {
 	location_address_id: number;
 	location_address_name: string;
 	phone: string;
+	updated_at: string;
 }
 
 interface PatientFormProps {
@@ -59,6 +61,7 @@ const initForm: Patient = {
 	location_address_id: 0,
 	location_address_name: '',
 	phone: '',
+	updated_at: '',
 };
 
 
@@ -66,17 +69,28 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 
 	const [loading, setLoading] = useState(false);
 	const form = useForm(initForm);
-	const [openConfirm, setOpenConfirm] = useState(false);
+	const [dialogConfirm, setDialogConfirm] = useState(dialogConfirmInit);
 	const [action, setAction] = useState<Actions | null>(null);
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (form.data.id) {
 			setAction({ type: 'update', data: form.data.id });
+			setDialogConfirm({
+				...dialogConfirm,
+				open: true,
+				title: '¿Actualizar paciente?',
+				description: '¿Deseas confirmar esta operación?'
+			});
 		} else {
 			setAction({ type: 'create', data: null });
+			setDialogConfirm({
+				...dialogConfirm,
+				open: true,
+				title: '¿Registrar paciente?',
+				description: '¿Deseas confirmar esta operación?'
+			});
 		}
-		setOpenConfirm(true);
 	};
 
 	const imprimirHojaIdentificacion = (patientId: number | null) => {
@@ -132,6 +146,7 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 					location_address_id: patient?.location_address_id || 0,
 					location_address_name: patient?.location_address?.location_name || '',
 					phone: patient?.phone || '',
+					updated_at: patient?.updated_at || '',
 				};
 				form.setData(dataPatients);
 				form.setDefaults(dataPatients); //para que isDirty este en falso
@@ -160,7 +175,7 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 				},
 			});
 		}
-		setOpenConfirm(false);
+		setDialogConfirm({ ...dialogConfirm, open: false });
 	};
 
 	useEffect(() => {
@@ -212,7 +227,7 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 							</div>
 						</div>
 						<FieldGroup className="gap-3">
-							<div className="grid gap-4 lg:grid-cols-4">
+							<div className="grid gap-4 lg:grid-cols-5">
 								{/* NHC */}
 								<Field className="gap-1">
 									<FieldLabel htmlFor="nhc">NHC</FieldLabel>
@@ -230,6 +245,11 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 								<Field className="gap-1">
 									<FieldLabel htmlFor="entry_at">Fecha ingreso</FieldLabel>
 									<Input id="entry_at" name="entry_at" disabled value={form.data.entry_at} placeholder="Autogenerado" />
+								</Field>
+								{/* FECHA DE ACTUALIZACIÓN */}
+								<Field className="gap-1">
+									<FieldLabel htmlFor="updated_at">Fecha actualización</FieldLabel>
+									<Input id="updated_at" name="updated_at" disabled value={form.data.updated_at} placeholder="Autogenerado" />
 								</Field>
 								{/* TIPO DE DOCUMENTO */}
 								<Field className="gap-1">
@@ -374,16 +394,14 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 				</CardContent>
 			</Card>
 			<ConfirmDialog
-				open={openConfirm}
-				onOpenChange={setOpenConfirm}
-				title="¿Confirmar acción?"
-				description={
-					action?.type === 'delete' ? 'Esta acción no se puede deshacer. ¿Seguro que deseas eliminar?' : '¿Deseas confirmar esta operación?'
-				}
-				onConfirm={executeAction}
-				confirmText="Sí, continuar"
-				cancelText="Cancelar"
-			/>
+          open={dialogConfirm.open}
+          onOpenChange={ (open) => setDialogConfirm({ ...dialogConfirm, open }) }
+          title={dialogConfirm.title}
+          description={dialogConfirm.description}
+          onConfirm={executeAction}
+          confirmText={dialogConfirm.confirmText}
+          cancelText={dialogConfirm.cancelText}
+        />
 		</div>
 	);
 }

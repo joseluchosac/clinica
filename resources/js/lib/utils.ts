@@ -18,9 +18,17 @@ export function debounce<T extends (...args: any[]) => void>(func: T, wait: numb
 export function limpiarObjeto<T extends Record<string, any>>(obj: T): Partial<T> {
     const resultado: Partial<T> = {};
     for (const [key, value] of Object.entries(obj)) {
-        if (value !== null && value !== '' && value !== undefined) {
+        if (value !== null && value.trim() !== '' && value !== undefined) {
             (resultado as any)[key] = value;
         }
     }
     return resultado;
 }
+
+export const dialogConfirmInit = {
+  open: false,
+  title: '¿Confirmar acción?',
+  description: '¿Deseas confirmar esta operación?',
+  confirmText: 'Sí, continuar',
+  cancelText: 'Cancelar',
+};

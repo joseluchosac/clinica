@@ -1,10 +1,10 @@
 import { ConfirmDialog } from '@/components/custom/confirm-dialog';
 import { Button } from '@/components/ui/button';
-import { Pagination } from '@/components/ui/pagination';
+import { Pagination } from '@/components/ui/custom/pagination';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { limpiarObjeto } from '@/lib/utils';
+import { dialogConfirmInit, limpiarObjeto } from '@/lib/utils';
 import { BreadcrumbItem, Flash, Identity, PatientItem } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { CirclePlus, RotateCcw } from 'lucide-react';
@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import PatientForm from './patient-form';
 import Filter from './components/filter';
 import MenuItem from './components/menu-item';
+import { useCan } from '@/hooks/use-can';
 
 
 
@@ -45,6 +46,8 @@ interface IndexProps {
     s_nhc: string;
     s_identity_number: string;
     s_birth_date: string;
+    o_field: string;
+    o_direction: string;
   };
 }
 
@@ -62,11 +65,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Index({ patients, identities, request_all }: IndexProps) {
   const [mode, setMode] = useState('table');
-  const {flash} = usePage<{flash?: Flash}>().props;
   const [openSearch, setOpenSearch] = useState(false);
   const [patientId, setPatientId] = useState<number | null>(null);
-  const [openConfirm, setOpenConfirm] = useState(false);
+  const [dialogConfirm, setDialogConfirm] = useState(dialogConfirmInit);
   const [action, setAction] = useState<Actions | null>(null);
+  const can =useCan()
+  const {flash} = usePage<{flash?: Flash}>().props;
 
   const formFilter = useForm({
     s_last_name: request_all.s_last_name || '',
@@ -74,6 +78,8 @@ export default function Index({ patients, identities, request_all }: IndexProps)
     s_nhc: request_all.s_nhc || '',
     s_identity_number: request_all.s_identity_number || '',
     s_birth_date: request_all.s_birth_date || '',
+    o_field: request_all.o_field || ' ', // espacio para que no tome el valor por defecto del backend
+    o_direction: request_all.o_direction || ' ', // espacio para que no tome el valor por defecto del backend
   });
 
   const formPatient = useForm();
@@ -84,6 +90,8 @@ export default function Index({ patients, identities, request_all }: IndexProps)
     e.preventDefault();
     setOpenSearch(false);
     const queryString = limpiarObjeto(formFilter.data);
+    // console.log(queryString);
+    // return;
     router.get(route('patients.index'), queryString, {
       preserveScroll: true,
       preserveState: true,
@@ -97,6 +105,8 @@ export default function Index({ patients, identities, request_all }: IndexProps)
       s_nhc: '',
       s_identity_number: '',
       s_birth_date: '',
+      o_field: ' ', // espacio para que no tome el valor por defecto del backend
+      o_direction: ' ', // espacio para que no tome el valor por defecto del backend
     });
     router.get(
       route('patients.index'),
@@ -111,14 +121,24 @@ export default function Index({ patients, identities, request_all }: IndexProps)
   const handleDelete = (id: number | null) => {
     if (!id) return;
     setAction({ type: 'delete', data: id });
-    setOpenConfirm(true);
+    setDialogConfirm({
+      ...dialogConfirm,
+      open: true,
+      title: '¿Eliminar paciente?',
+      description: 'Esta acción no se puede deshacer. ¿Seguro que deseas eliminar?'
+    });
   };
 
   const handleDebug = (id: number | null, value: number) => {
     if (!id) return;
     formDebug.setData({ value: value });
     setAction({ type: 'debug', data: id });
-    setOpenConfirm(true);
+    setDialogConfirm({
+      ...dialogConfirm,
+      open: true,
+      title: '¿Modificar depuración?',
+      description: '¿Deseas confirmar esta operación?'
+    });
   };
 
   const executeAction = () => {
@@ -132,7 +152,7 @@ export default function Index({ patients, identities, request_all }: IndexProps)
         onError: () => toast.error('Error al modificar depuración'),
       });
     }
-    setOpenConfirm(false);
+    setDialogConfirm({ ...dialogConfirm, open: false });
   };
 
   useEffect(() => {
@@ -168,14 +188,17 @@ export default function Index({ patients, identities, request_all }: IndexProps)
             handleSubmitFilter={handleSubmitFilter} 
             resetFilter={resetFilter}
           />
-          <Button
-            onClick={() => {
-              setPatientId(null);
-              setMode('form');
-            }}
-          >
-            <CirclePlus /> Nuevo paciente
-          </Button>
+          {can('create_patients') && (
+            <Button
+              onClick={() => {
+                if(!can('create_patients')) return
+                setPatientId(null);
+                setMode('form');
+              }}
+            >
+              <CirclePlus /> Nuevo paciente
+            </Button>
+          )}
         </div>
 
         <div className="grow overflow-hidden">
@@ -191,8 +214,6 @@ export default function Index({ patients, identities, request_all }: IndexProps)
                   <TableHead className="p-2 text-blue-100">F NAC</TableHead>
                   <TableHead className="p-2 text-blue-100">DIRECCION</TableHead>
                   <TableHead className="p-2 text-blue-100">F ING</TableHead>
-                  <TableHead className="p-2 text-blue-100">F CRE</TableHead>
-                  <TableHead className="p-2 text-blue-100">F UPD</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="text-[0.85rem]">
@@ -236,9 +257,12 @@ export default function Index({ patients, identities, request_all }: IndexProps)
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="px-2 py-1 text-nowrap" title={patient.entry_at}>{patient.entry_at}</TableCell>
-                      <TableCell className="px-2 py-1 text-nowrap" title={patient.created_at}>{patient.created_at}</TableCell>
-                      <TableCell className="px-2 py-1 text-nowrap" title={patient.updated_at}>{patient.updated_at}</TableCell>
+                      <TableCell 
+                        className="px-2 py-1 text-nowrap" 
+                        title={`CR: ${patient.created_at}\nUP: ${patient.updated_at}`}
+                      >
+                        {patient.entry_at?.split(' ')[0]}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -251,7 +275,7 @@ export default function Index({ patients, identities, request_all }: IndexProps)
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
         </div>
-        <Pagination patients={patients} />
+        <Pagination paginationData={patients} />
       </div>
 
       {/* SECCION FORMULARIO */}
@@ -260,15 +284,13 @@ export default function Index({ patients, identities, request_all }: IndexProps)
       </div>
 
       <ConfirmDialog
-        open={openConfirm}
-        onOpenChange={setOpenConfirm}
-        title="¿Confirmar acción?"
-        description={
-          action?.type === 'delete' ? 'Esta acción no se puede deshacer. ¿Seguro que deseas eliminar?' : '¿Deseas confirmar esta operación?'
-        }
+        open={dialogConfirm.open}
+        onOpenChange={ (open) => setDialogConfirm({ ...dialogConfirm, open }) }
+        title={dialogConfirm.title}
+        description={dialogConfirm.description}
         onConfirm={executeAction}
-        confirmText="Sí, continuar"
-        cancelText="Cancelar"
+        confirmText={dialogConfirm.confirmText}
+        cancelText={dialogConfirm.cancelText}
       />
     </AppLayout>
   );

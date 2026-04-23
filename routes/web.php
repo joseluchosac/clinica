@@ -8,10 +8,20 @@ use App\Http\Controllers\MovementController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\UpdateController;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('welcome');
+// Route::get('/', function () {
+//     return Inertia::render('welcome');
+// })->name('home');
+
+Route::get('/', function (Request $request) {
+    // Si el usuario está logueado, lo enviamos al dashboard
+    if ($request->user()) {
+        return redirect()->route('dashboard');
+    }
+    // Si no está logueado, lo enviamos al login
+    return redirect()->route('login');
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {

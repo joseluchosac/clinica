@@ -3,6 +3,7 @@ import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { CarFront, ChevronRight } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { useCan } from '@/hooks/use-can';
 
 interface NavMainProps {
     items: NavItem[];
@@ -11,12 +12,17 @@ interface NavMainProps {
 
 export function NavMain({ items = [], handleMainNavItems}: NavMainProps) {
     const page = usePage();
+    const can = useCan()
     return (
         <SidebarGroup className="px-2 py-0">
-            {/* <SidebarGroupLabel>Platform</SidebarGroupLabel> */}
+            <SidebarGroupLabel>Platform</SidebarGroupLabel>
             <SidebarMenu>
-                {items.map((item) => (
-                    item.items ?
+                {items.filter((item) => {
+                    if(!item.can) return true
+                    const res = item.can.filter(el=>can(el))
+                    return Boolean(res.length)
+                }).map((item) => (
+                    item.subItems ?
                     <Collapsible
                         open={item.isOpen}
                         key={item.title}
@@ -38,7 +44,11 @@ export function NavMain({ items = [], handleMainNavItems}: NavMainProps) {
                             </CollapsibleTrigger>
                             <CollapsibleContent>
                                 <SidebarMenuSub>
-                                    {item.items?.map((subItem) => (
+                                    {item.subItems?.filter((subItem)=>{
+                                        if(!subItem.can) return true
+                                        const res = subItem.can.filter(el=>can(el))
+                                        return Boolean(res.length)
+                                    }).map((subItem) => (
                                         <SidebarMenuSubItem key={subItem.title}>
                                         <SidebarMenuSubButton
                                             asChild

@@ -6,12 +6,12 @@ export default function AppLogo() {
             {/* <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-md">
                 <AppLogoIcon className="size-5 fill-current text-white dark:text-black" />
             </div> */}
-            <div className="ml-1 flex justify-between items-center flex-1 text-left">
-                <img src='/logo_prp.png' className='size-12' />
-                <div className='flex flex-col gap-1 text-blue-700 dark:text-blue-400'>
-                    <span className="mb-0.5 truncate leading-none font-semibold text-center">POLICLÍNICO</span>
-                    <span className="mb-0.5 truncate leading-none font-semibold text-center">REYNA DE LA PAZ</span>
-                </div>
+            <div className="text-sidebar-primary-foreground flex aspect-square size-10 items-center justify-center rounded-md">
+                <img src='/logo_prp.png' />
+            </div>
+            <div className='flex flex-col text-blue-700 dark:text-blue-400 font-ptserif font-bold ml-6 text-[0.95rem]'>
+                <span className="mb-0.5 truncate leading-none font-semibold text-center">POLICLÍNICO</span>
+                <span className="mb-0.5 truncate leading-none font-semibold text-center">REYNA DE LA PAZ</span>
             </div>
         </>
     );

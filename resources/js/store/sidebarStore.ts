@@ -1,7 +1,7 @@
 // resources/js/store/sidebar.ts
-import { NavItem } from "@/types";
-import { LayoutGrid, UsersRound } from "lucide-react";
-import { create } from "zustand";
+import { NavItem } from '@/types';
+import { LayoutGrid, UsersRound } from 'lucide-react';
+import { create } from 'zustand';
 
 type SidebarState = {
   mainNavItems: NavItem[];
@@ -9,61 +9,78 @@ type SidebarState = {
 };
 
 const mainNavItemsInit: NavItem[] = [
-    {
-        title: 'Inicio',
-        url: '/dashboard',
-        icon: LayoutGrid,
-        isActive: true,
-        isOpen: false,
-        items: null,
-    },
-    {
-        title: 'Pacientes',
-        url: '/patients',
-        icon: UsersRound,
-        isActive: false,
-        isOpen: false,
-        items: null,
-    },
-    {
-        title: 'Archivo',
-        url: '/archive',
-        icon: LayoutGrid,
-        isActive: false,
-        isOpen: false,
-        items: [
-            {
-                title: 'Movimientos',
-                url: '/archive/movements'
-            },
-            {
-                title: 'Depuraciones',
-                url: '/archive/debuggs',
-            },
-            {
-                title: 'Actualizaciones',
-                url: '/archive/updates',
-            },
-        ]
-    },
-    {
-        title: 'Administración',
-        url: '/admin',
-        icon: LayoutGrid,
-        isActive: false,
-        isOpen: false,
-        items: [
-            {
-                title: 'Usuarios',
-                url: '/admin/users',
-            },
-        ]
-    },
+  {
+    title: 'Inicio',
+    url: '/dashboard',
+    icon: LayoutGrid,
+    isActive: true,
+    isOpen: false,
+    can: null,
+    subItems: null,
+  },
+  {
+    title: 'Pacientes',
+    url: '/patients',
+    icon: UsersRound,
+    isActive: false,
+    isOpen: false,
+    can: ['read_patients'],
+    subItems: null,
+  },
+  {
+    title: 'Archivo',
+    url: '/archive',
+    icon: LayoutGrid,
+    isActive: false,
+    isOpen: false,
+    can: null,
+    subItems: [
+      {
+        title: 'Movimientos',
+        url: '/archive/movements',
+        can: null,
+      },
+      {
+        title: 'Depuraciones',
+        url: '/archive/debuggs',
+        can: null,
+      },
+      {
+        title: 'Actualizaciones',
+        url: '/archive/updates',
+        can: [],
+      },
+    ],
+  },
+  {
+    title: 'Administración',
+    url: '/admin',
+    icon: LayoutGrid,
+    isActive: false,
+    isOpen: false,
+    can: ['read_users'],
+    subItems: [
+      {
+        title: 'Usuarios',
+        url: '/admin/users',
+        can: ['read_users'],
+      },
+      {
+        title: 'Roles',
+        url: '/admin/roles',
+        can: null,
+      },
+      {
+        title: 'Permisos',
+        url: '/admin/permissions',
+        can: null,
+      },
+    ],
+  },
 ];
-
 const initialState = {
   mainNavItems: mainNavItemsInit,
-}
+};
 
 export const useSidebarStore = create<SidebarState>((set) => ({
   ...initialState,

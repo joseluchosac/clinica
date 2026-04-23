@@ -36,13 +36,12 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout title="Iniciar sesión" description="Introduce tu nombre de usuario o correo electrónico y contraseña para iniciar sesión.">
+        <AuthLayout title="Iniciar sesión" description="">
             <Head title="Log in" />
-
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="login">Correo electronico o Nombre de usuario</Label>
+                        <Label htmlFor="login">Nombre de usuario o email</Label>
                         <Input
                             id="login"
                             type="text"
@@ -52,7 +51,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             autoComplete="login"
                             value={data.login}
                             onChange={(e) => setData('login', e.target.value)}
-                            placeholder="Ej. email@ejemplo.com o username"
+                            // placeholder="Ej. email@ejemplo.com o username"
                         />
                         <InputError message={errors.login} />
                     </div>
@@ -60,11 +59,11 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <div className="grid gap-2">
                         <div className="flex items-center">
                             <Label htmlFor="password">Contraseña</Label>
-                            {canResetPassword && (
+                            {/* {canResetPassword && (
                                 <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
                                     ¿Has olvidado tu contraseña?
                                 </TextLink>
-                            )}
+                            )} */}
                         </div>
                         <Input
                             id="password"
@@ -90,12 +89,12 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     </Button>
                 </div>
 
-                <div className="text-muted-foreground text-center text-sm">
+                {/* <div className="text-muted-foreground text-center text-sm">
                     ¿No tienes una cuenta?{' '}
                     <TextLink href={route('register')} tabIndex={5}>
                         Registrarse
                     </TextLink>
-                </div>
+                </div> */}
             </form>
 
             {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}

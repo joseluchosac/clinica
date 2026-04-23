@@ -11,6 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class PatientController extends Controller
@@ -20,6 +21,13 @@ class PatientController extends Controller
    */
   public function index(Request $request)
   {
+    // dd($request->all());
+    // $orderBy = [
+    //   'campo' => 'updated_at',
+    //   'direccion' => 'asc',
+    // ];
+    // $orderBy = null;
+
     $identities = Identity::select('code', 'name', 'long')->get();
     $patients = Patient::query()->with('locationAddress');
     if ($request->filled('s_last_name')) {
@@ -52,12 +60,17 @@ class PatientController extends Controller
     }
 
     // Ordenamiento
-    if ($request->filled('s_last_name') || $request->filled('s_first_name')) {
-      $patients->orderBy('last_name', 'asc')
-        ->orderBy('first_name', 'asc')
-        ->orderBy('nhc', 'desc');
-    } else {
-      $patients->orderBy('id', 'desc');
+    if($request->filled('o_field')){
+      $direction = $request->o_direction ?? 'asc';
+      $patients->orderBy($request->o_field, $direction);
+    }else{
+      if ($request->filled('s_last_name') || $request->filled('s_first_name')) {
+        $patients->orderBy('last_name', 'asc')
+          ->orderBy('first_name', 'asc')
+          ->orderBy('nhc', 'desc');
+      } else {
+        $patients->orderBy('id', 'desc');
+      }
     }
 
     $patients = $patients->paginate(100)->onEachSide(1)->withQueryString(); //Mantiene los parametros query string 
@@ -82,7 +95,6 @@ class PatientController extends Controller
       'identities' => $identities,
       // 'filters' => $request->only(['search']),
       'request_all' => $request->all(),
-
     ]);
   }
 
@@ -91,7 +103,8 @@ class PatientController extends Controller
    */
   public function create()
   {
-    return Inertia::render('patients/patient-form');
+    // Gate::authorize('create-patientsss');
+    // return Inertia::render('patients/patient-form');
   }
 
   /**
@@ -166,8 +179,8 @@ class PatientController extends Controller
   public function edit(Patient $patient)
   {
     // dd($patient->toArray());
-    $identities = Identity::all();
-    return Inertia::render('patients/patient-form', compact('patient', 'identities'));
+    // $identities = Identity::all();
+    // return Inertia::render('patients/patient-form', compact('patient', 'identities'));
   }
 
   /**
@@ -197,9 +210,8 @@ class PatientController extends Controller
 
   public function data(string $id)
   {
-
     // $patient = Patient::where('id', $id)->with(['locationAddress', 'locationBirth'])->get();
-
+    Gate::authorize('create_patients');
     $patient = Patient::with(['locationAddress', 'locationBirth'])->find($id);
     //
     return [
