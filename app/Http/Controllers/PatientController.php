@@ -84,10 +84,10 @@ class PatientController extends Controller
       'birth_date' => $patient->birth_date,
       'address' => $patient->address,
       'location_address_name' => $patient->locationAddress?->location_name,
-      'entry_at' => $patient->entry_at?->format('Y-m-d H:i:s'),
+      'entry_at' => $patient->entry_at?->format('Y-m-d H:i'),
       'debugged' => $patient->debugged,
-      'created_at' => $patient->created_at?->format('Y-m-d H:i:s'),
-      'updated_at' => $patient->updated_at?->format('Y-m-d H:i:s'),
+      'created_at' => $patient->created_at?->format('Y-m-d H:i'),
+      'updated_at' => $patient->updated_at?->format('Y-m-d H:i'),
     ]);
 
     return Inertia::render('patients/index', [
@@ -213,7 +213,9 @@ class PatientController extends Controller
     // $patient = Patient::where('id', $id)->with(['locationAddress', 'locationBirth'])->get();
     Gate::authorize('create_patients');
     $patient = Patient::with(['locationAddress', 'locationBirth'])->find($id);
-    //
+    // $patient->created_at = $patient->created_at->format('d/m/Y H:i');
+    // $patient->updated_at = $patient->updated_at->format('d/m/Y H:i');
+    // dd($patient->toArray());
     return [
       'patient' => $patient,
     ];

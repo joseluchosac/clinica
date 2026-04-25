@@ -89,3 +89,13 @@ export interface PatientItem {
   created_at: string;
   updated_at: string;
 }
+
+export interface SearchParamsPatients {
+  s_last_name?: string;
+  s_first_name?: string;
+  s_nhc?: string;
+  s_identity_number?: string;
+  s_birth_date?: string;
+  o_field?: string;
+  o_direction?: string;
+}

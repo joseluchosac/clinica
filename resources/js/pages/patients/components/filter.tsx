@@ -3,6 +3,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { SearchParamsPatients } from "@/types";
 import { Search } from "lucide-react";
 import { InertiaFormProps } from "node_modules/@inertiajs/react/types/useForm";
 import { Dispatch, FormEvent, SetStateAction } from "react";
@@ -10,21 +11,13 @@ import { Dispatch, FormEvent, SetStateAction } from "react";
 interface FilterProps {
   openSearch: boolean;
   setOpenSearch: Dispatch<SetStateAction<boolean>>;
-  formFilter: InertiaFormProps<{
-    s_last_name: string;
-    s_first_name: string;
-    s_nhc: string;
-    s_identity_number: string;
-    s_birth_date: string;
-    o_field: string;
-    o_direction: string;
-  }>;
-  handleSubmitFilter: (e: FormEvent<HTMLFormElement>) => void;
+  formFilter: InertiaFormProps<SearchParamsPatients>;
+  applyFilter: () => void;
   resetFilter: () => void
 }
 
 
-export default function Filter({ openSearch, setOpenSearch, formFilter, handleSubmitFilter, resetFilter}: FilterProps) {
+export default function Filter({ openSearch, setOpenSearch, formFilter, applyFilter, resetFilter}: FilterProps) {
   return (
     <Sheet open={openSearch} onOpenChange={setOpenSearch}>
       <SheetTrigger asChild>
@@ -37,7 +30,7 @@ export default function Filter({ openSearch, setOpenSearch, formFilter, handleSu
           <SheetTitle>Filtro de pacientes</SheetTitle>
           <SheetDescription></SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmitFilter} className="mt-4 flex flex-col gap-2">
+        <form onSubmit={(e) => { e.preventDefault(); applyFilter(); }} className="mt-4 flex flex-col gap-2">
           <FieldGroup className="gap-3">
             <Field className="gap-1">
               <FieldLabel>Apellidos</FieldLabel>
@@ -79,7 +72,7 @@ export default function Filter({ openSearch, setOpenSearch, formFilter, handleSu
             <Field className="gap-1">
               <FieldLabel>F. Nac</FieldLabel>
               <Input
-                type="search"
+                type="date"
                 name="s_birth_date"
                 value={formFilter.data.s_birth_date}
                 onChange={(e) => formFilter.setData({ ...formFilter.data, s_birth_date: e.target.value })}
@@ -90,7 +83,6 @@ export default function Filter({ openSearch, setOpenSearch, formFilter, handleSu
               <Select
                 value={formFilter.data.o_field}
                 onValueChange={(value) => {
-                  console.log(value)
                   formFilter.setData({ ...formFilter.data, o_field: value, o_direction: ' ' }) // espacio para que no tome el valor por defecto del backend
                 }}
               >
@@ -114,7 +106,7 @@ export default function Filter({ openSearch, setOpenSearch, formFilter, handleSu
             <Field className="gap-1">
               <FieldLabel>Dirección</FieldLabel>
               <Select
-                disabled={!formFilter.data.o_field.trim()}
+                disabled={!formFilter.data.o_field?.trim()}
                 value={formFilter.data.o_direction}
                 onValueChange={(value) => formFilter.setData({ ...formFilter.data, o_direction: value })}
               >

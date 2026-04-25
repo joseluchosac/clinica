@@ -7,6 +7,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UpdateController;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,8 +30,6 @@ Route::middleware(['auth'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    
-
     // PACIENTES
     Route::resource("patients", PatientController::class);
     Route::get('patients/data/{patient}',[PatientController::class, 'data'])->name('patients.data');
@@ -44,6 +43,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('archive/movements', [MovementController::class, 'index'])->name('archive.movements.index');
     Route::get('archive/debuggs', [DebuggController::class, 'index'])->name('archive.debuggs.index');
 
+    // OTRAS SOLICITUDES
+    Route::post('/services/consultar-dni', [ServiceController::class, 'consultarDni'])->name('services.consultar-dni');
 });
 
 Route::get('/pdf/hc-clasica/{patient}', [PatientController::class, 'hcClasica'])->name('pdf.hc-clasica');

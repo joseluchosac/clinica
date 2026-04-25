@@ -25,8 +25,8 @@ class PatientFormRequest extends FormRequest
     $rules = [
       'identity_code' => 'required',
       'identity_number' => 'required',
-      'last_name' => 'required',
-      'first_name' => 'required',
+      'last_name' => 'required|min:2', // apellidos
+      'first_name' => 'required|min:2', // nombres
       'birth_date' => 'required',
       'gender' => ['required', 'in:F,M,f,m'],
       'birth_date' => 'nullable',

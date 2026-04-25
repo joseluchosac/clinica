@@ -4,8 +4,8 @@ import { Pagination } from '@/components/ui/custom/pagination';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { dialogConfirmInit, limpiarObjeto } from '@/lib/utils';
-import { BreadcrumbItem, Flash, Identity, PatientItem } from '@/types';
+import { calcularEdad, dialogConfirmInit, getSearchParams, limpiarObjeto } from '@/lib/utils';
+import { BreadcrumbItem, Flash, Identity, PatientItem, SearchParamsPatients } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { CirclePlus, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -14,8 +14,8 @@ import PatientForm from './patient-form';
 import Filter from './components/filter';
 import MenuItem from './components/menu-item';
 import { useCan } from '@/hooks/use-can';
-
-
+import FilterBadges from './components/filter-badges';
+import dayjs from 'dayjs';
 
 interface LinkProps {
   active: boolean;
@@ -40,15 +40,7 @@ interface IndexProps {
   patients: PatientPagination;
   identities: Identity[];
   filters: FilterProps;
-  request_all: {
-    s_last_name: string;
-    s_first_name: string;
-    s_nhc: string;
-    s_identity_number: string;
-    s_birth_date: string;
-    o_field: string;
-    o_direction: string;
-  };
+  request_all: SearchParamsPatients;
 }
 
 interface Actions {
@@ -70,9 +62,11 @@ export default function Index({ patients, identities, request_all }: IndexProps)
   const [dialogConfirm, setDialogConfirm] = useState(dialogConfirmInit);
   const [action, setAction] = useState<Actions | null>(null);
   const can =useCan()
-  const {flash} = usePage<{flash?: Flash}>().props;
-
-  const formFilter = useForm({
+  const page = usePage();
+  const { flash } = page.props as { flash?: Flash };
+  const formPatient = useForm();
+  const formDebug = useForm({ value: 0 });
+  const formFilter = useForm<SearchParamsPatients>({
     s_last_name: request_all.s_last_name || '',
     s_first_name: request_all.s_first_name || '',
     s_nhc: request_all.s_nhc || '',
@@ -81,17 +75,12 @@ export default function Index({ patients, identities, request_all }: IndexProps)
     o_field: request_all.o_field || ' ', // espacio para que no tome el valor por defecto del backend
     o_direction: request_all.o_direction || ' ', // espacio para que no tome el valor por defecto del backend
   });
+  const searchParams = getSearchParams<SearchParamsPatients>(page.url);
 
-  const formPatient = useForm();
-
-  const formDebug = useForm({ value: 0 });
-
-  const handleSubmitFilter = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const applyFilter = () => {
     setOpenSearch(false);
     const queryString = limpiarObjeto(formFilter.data);
-    // console.log(queryString);
-    // return;
+    const algo = formFilter.setData
     router.get(route('patients.index'), queryString, {
       preserveScroll: true,
       preserveState: true,
@@ -142,7 +131,6 @@ export default function Index({ patients, identities, request_all }: IndexProps)
   };
 
   const executeAction = () => {
-    // console.log('confirmada la acción ' + action?.type)
     if (action?.type === 'delete') {
       formPatient.delete(route('patients.destroy', action.data), {
         onError: () => toast.error('Error al eliminar paciente'),
@@ -175,32 +163,36 @@ export default function Index({ patients, identities, request_all }: IndexProps)
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Pacientes" />
       {/* SECCION TABLA */}
-      <div className={`flex h-[calc(100vh-80px)] flex-col gap-2 rounded-xl px-4 pt-4 pb-2 ${mode === 'table' ? '' : 'hidden'}`}>
-        <div className="flex justify-end gap-4 py-2">
-          <Button variant="outline" onClick={resetFilter}>
-            <RotateCcw /> reset
-          </Button>
-          {/* SECCION FILTRADO */}
-          <Filter
-            openSearch={openSearch} 
-            setOpenSearch={setOpenSearch} 
-            formFilter={formFilter} 
-            handleSubmitFilter={handleSubmitFilter} 
-            resetFilter={resetFilter}
-          />
-          {can('create_patients') && (
-            <Button
-              onClick={() => {
-                if(!can('create_patients')) return
-                setPatientId(null);
-                setMode('form');
-              }}
-            >
-              <CirclePlus /> Nuevo paciente
+      <div className={`flex h-[calc(100vh-80px)] flex-col gap-2 rounded-xl p-2 lg:p-4 pb-2 ${mode === 'table' ? '' : 'hidden'}`}>
+        {/* <div className="flex justify-end gap-4 py-2"> */}
+        <div className="flex flex-col-reverse gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <FilterBadges searchParams={searchParams} formFilter={formFilter} applyFilter={applyFilter} />
+          <div className='flex gap-2 justify-center'>
+            <Button variant="outline" onClick={resetFilter}>
+              <RotateCcw /> reset
             </Button>
-          )}
-        </div>
+            {/* SECCION FILTRADO */}
+            <Filter
+              openSearch={openSearch} 
+              setOpenSearch={setOpenSearch} 
+              formFilter={formFilter} 
+              applyFilter={applyFilter} 
+              resetFilter={resetFilter}
+            />
+            {can('create_patients') && (
+              <Button
+                onClick={() => {
+                  if(!can('create_patients')) return
+                  setPatientId(null);
+                  setMode('form');
+                }}
+              >
+                <CirclePlus /> Nuevo paciente
+              </Button>
+            )}
 
+          </div>
+        </div>
         <div className="grow overflow-hidden">
           <ScrollArea className="h-full rounded-md border">
             <Table>
@@ -248,7 +240,14 @@ export default function Index({ patients, identities, request_all }: IndexProps)
                         {patient.identity_number}{' '}
                         <small>{patient.identity_name ? '(' + patient.identity_name + ')' : ''}</small>
                       </TableCell>
-                      <TableCell className="px-2 py-1 text-nowrap">{patient.birth_date}</TableCell>
+                      <TableCell className="px-2 py-1 text-nowrap">
+                        <div>
+                          {dayjs(patient.birth_date).format("DD/MM/YYYY")}
+                          {calcularEdad(patient.birth_date) !== null && (
+                            <small> ({calcularEdad(patient.birth_date)})</small>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="px-2 py-1">
                         <div className="max-w-[15vw]">
                           <div className="truncate text-nowrap">{patient.address}</div>
@@ -261,7 +260,7 @@ export default function Index({ patients, identities, request_all }: IndexProps)
                         className="px-2 py-1 text-nowrap" 
                         title={`CR: ${patient.created_at}\nUP: ${patient.updated_at}`}
                       >
-                        {patient.entry_at?.split(' ')[0]}
+                        {dayjs(patient.entry_at).format("DD/MM/YYYY")}
                       </TableCell>
                     </TableRow>
                   ))

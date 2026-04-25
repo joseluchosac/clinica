@@ -20,8 +20,10 @@ class LocationController extends Controller
         $query = $request->input('query');
         $results = Location::where('location_name', 'like', "{$query}%")
             ->where('status', 1)
-            ->orWhere('ubigeo_inei', "{$query}")
+            // ->orWhere('ubigeo_inei', "{$query}")
             ->orWhere('ubigeo_reniec', "{$query}")
+            ->orderBy('order')
+            ->orderBy('location_name')
             ->limit(20)
             ->get(['id', 'location_name']);
 
