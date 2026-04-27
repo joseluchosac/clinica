@@ -6,9 +6,9 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { dialogConfirmInit } from '@/lib/utils';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, Role } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { KeySquare, RotateCcw, RotateCcwIcon, Save, X } from 'lucide-react';
+import { KeySquare, Save, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -17,8 +17,7 @@ interface Form {
   name: string;
   username: string;
   email: string;
-  // password: string;
-  // password_confirmation: string;
+  rolesIds: number[]; // Array de IDs de roles
 }
 
 interface User {
@@ -48,10 +47,16 @@ const formInit: Form = {
   name: '',
   username: '',
   email: '',
+  rolesIds: [],
 };
 
-export default function UserForm({ ...props }: { user: User | undefined }) {
-  const { user } = props;
+interface UserFormProps {
+  user: User | undefined;
+  roles: Role[];
+  userRolesIds: number[] | undefined;
+}
+export default function UserForm({ ...props }: UserFormProps) {
+  const { user, roles, userRolesIds } = props;
   const [dialogConfirm, setDialogConfirm] = useState(dialogConfirmInit);
   const [action, setAction] = useState<Actions | null>(null);
   const form = useForm(formInit);
@@ -118,7 +123,8 @@ export default function UserForm({ ...props }: { user: User | undefined }) {
         id: user.id,
         name: user.name,
         username: user.username,
-        email: user.email
+        email: user.email,
+        rolesIds: userRolesIds ?? [], // Asignar los IDs de roles al formulario
       });
     }
   }, [user]);
@@ -193,6 +199,28 @@ export default function UserForm({ ...props }: { user: User | undefined }) {
                   <InputError message={form.errors.email} />
                 </Field>
               </FieldGroup>
+              <div className='text-sm font-medium mt-4 mb-2'>Roles (Seleccionar solo uno)</div>
+              <div className="md:columns-2 lg:columns-4 gap-2">
+                {roles.map((role) => (
+                  <div key={role.id}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        name="rolesIds[]"
+                        checked={form.data.rolesIds.includes(role.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            form.setData('rolesIds', [...form.data.rolesIds, role.id]);
+                          } else {
+                            form.setData('rolesIds', form.data.rolesIds.filter((id: number) => id !== role.id));
+                          }
+                        }}
+                      />
+                      <span> {role.name}</span>
+                    </label>
+                  </div>
+                ))}
+              </div>
             </form>
           </CardContent>
         </Card>

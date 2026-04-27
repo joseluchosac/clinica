@@ -16,6 +16,24 @@ import MenuItem from './components/menu-item';
 import { useCan } from '@/hooks/use-can';
 import FilterBadges from './components/filter-badges';
 import dayjs from 'dayjs';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'Pacientes',
+    href: '/patients/index',
+  },
+];
+
+const formFilterInit: SearchParamsPatients = {
+  s_last_name: '',
+  s_first_name: '',
+  s_nhc: '',
+  s_identity_number: '',
+  s_birth_date: '',
+  o_field: ' ', // espacio para que no tome el valor por defecto del backend
+  o_direction: ' ', // espacio para que no tome el valor por defecto del backend
+}
 
 interface LinkProps {
   active: boolean;
@@ -36,6 +54,11 @@ interface FilterProps {
   search: string;
 }
 
+interface Actions {
+  type: 'create' | 'update' | 'delete' | 'debug' | null;
+  data: any;
+}
+
 interface IndexProps {
   patients: PatientPagination;
   identities: Identity[];
@@ -43,17 +66,6 @@ interface IndexProps {
   request_all: SearchParamsPatients;
 }
 
-interface Actions {
-  type: 'create' | 'update' | 'delete' | 'debug' | null;
-  data: any;
-}
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Pacientes',
-    href: '/patients/index',
-  },
-];
 
 export default function Index({ patients, identities, request_all }: IndexProps) {
   const [mode, setMode] = useState('table');
@@ -88,15 +100,7 @@ export default function Index({ patients, identities, request_all }: IndexProps)
   };
 
   const resetFilter = () => {
-    formFilter.setData({
-      s_last_name: '',
-      s_first_name: '',
-      s_nhc: '',
-      s_identity_number: '',
-      s_birth_date: '',
-      o_field: ' ', // espacio para que no tome el valor por defecto del backend
-      o_direction: ' ', // espacio para que no tome el valor por defecto del backend
-    });
+    formFilter.setData(formFilterInit);
     router.get(
       route('patients.index'),
       {}, // request payload
@@ -143,6 +147,15 @@ export default function Index({ patients, identities, request_all }: IndexProps)
     setDialogConfirm({ ...dialogConfirm, open: false });
   };
 
+  useKeyboardShortcuts({
+    "alt+b": () => setOpenSearch(true),
+    "alt+n": () => {
+      if(!can('create_patients')) return
+        setPatientId(null);
+        setMode('form');
+    },
+    "alt+r": () => resetFilter(),
+  });
   useEffect(() => {
     if (flash?.resp?.action == 'storePatient') {
       if (flash?.resp?.type == 'success') {
@@ -178,6 +191,7 @@ export default function Index({ patients, identities, request_all }: IndexProps)
               formFilter={formFilter} 
               applyFilter={applyFilter} 
               resetFilter={resetFilter}
+              formFilterInit = {formFilterInit}
             />
             {can('create_patients') && (
               <Button
@@ -219,6 +233,7 @@ export default function Index({ patients, identities, request_all }: IndexProps)
                           setMode={setMode}
                           handleDebug={handleDebug}
                           handleDelete={handleDelete}
+                          can={can}
                         />
                       </TableCell>
                       <TableCell className="px-2 py-1">
@@ -242,7 +257,7 @@ export default function Index({ patients, identities, request_all }: IndexProps)
                       </TableCell>
                       <TableCell className="px-2 py-1 text-nowrap">
                         <div>
-                          {dayjs(patient.birth_date).format("DD/MM/YYYY")}
+                          {patient.birth_date && dayjs(patient.birth_date).format("DD/MM/YYYY")}
                           {calcularEdad(patient.birth_date) !== null && (
                             <small> ({calcularEdad(patient.birth_date)})</small>
                           )}
@@ -260,7 +275,7 @@ export default function Index({ patients, identities, request_all }: IndexProps)
                         className="px-2 py-1 text-nowrap" 
                         title={`CR: ${patient.created_at}\nUP: ${patient.updated_at}`}
                       >
-                        {dayjs(patient.entry_at).format("DD/MM/YYYY")}
+                        {patient.entry_at && dayjs(patient.entry_at).format("DD/MM/YYYY")}
                       </TableCell>
                     </TableRow>
                   ))
@@ -279,7 +294,14 @@ export default function Index({ patients, identities, request_all }: IndexProps)
 
       {/* SECCION FORMULARIO */}
       <div className={`flex h-full flex-col gap-4 rounded-xl p-4 ${mode === 'form' ? '' : 'hidden'}`}>
-        {mode === 'form' && <PatientForm patientId={patientId} identities={identities} onClose={() => setMode('table')} />}
+        {mode === 'form' && (
+          <PatientForm 
+            patientId={patientId} 
+            identities={identities} 
+            onClose={() => setMode('table')}
+            can={can}
+          />
+        )}
       </div>
 
       <ConfirmDialog

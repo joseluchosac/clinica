@@ -19,15 +19,12 @@ import { z } from 'zod';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { patientSchema } from '@/types/schemas';
 import useReniec from '@/hooks/use-reniec';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 
 
 type Patient = z.infer<typeof patientSchema>;
 
-interface PatientFormProps {
-	patientId: number | null;
-	identities: Identity[];
-	onClose: () => void;
-}
+
 
 interface Actions {
 	type: 'create' | 'update' | 'delete' | null;
@@ -35,8 +32,8 @@ interface Actions {
 }
 
 const initForm: Patient = {
-	id: 0,
-	nhc: 0,
+	id: null,
+	nhc: null,
 	entry_at: '',
 	identity_code: '01',
 	identity_number: '',
@@ -53,7 +50,13 @@ const initForm: Patient = {
 	updated_at: '',
 };
 
-export default function PatientForm({ patientId, identities, onClose }: PatientFormProps) {
+interface PatientFormProps {
+	patientId: number | null;
+	identities: Identity[];
+	can: (permission: string) => boolean;
+	onClose: () => void;
+}
+export default function PatientForm({ patientId, identities, can, onClose }: PatientFormProps) {
 	const [loading, setLoading] = useState(false);
 	const { data, error, loading: reniecLoading, consultarDni } = useReniec();
 	const form = useForm(initForm);
@@ -61,8 +64,7 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 	const [action, setAction] = useState<Actions | null>(null);
 	const [errors, setErrors] = useState<Partial<Record<keyof Patient, string>>>({});
 
-	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-		e.preventDefault();
+	const submit = () => {
 		const result = patientSchema.safeParse(form.data);
 		if (!result.success) {
 			const fieldErrors: Partial<Record<keyof Patient, string>> = {};
@@ -152,6 +154,14 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 			.finally(() => setLoading(false));
 	};
 
+	const handleRequestIdentity = () => {
+		if(form.data.identity_code !== '01') {
+			toast.error('Solo se puede solicitar datos para DNI');
+			return;
+		}
+		consultarDni(form.data.identity_number);
+	}
+
 	const executeAction = () => {
 		if (action?.type === 'update') {
 			form.put(route('patients.update', action.data), {
@@ -176,13 +186,13 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 		setDialogConfirm({ ...dialogConfirm, open: false });
 	};
 
-	const handleRequestIdentity = () => {
-		if(form.data.identity_code !== '01') {
-			toast.error('Solo se puede solicitar datos para DNI');
-			return;
-		}
-		consultarDni(form.data.identity_number);
+	const saludar = ()=>{
+		console.log('hola')
 	}
+
+  useKeyboardShortcuts({
+    "escape": onClose,
+  });
 
 	useEffect(() => {
 		if (patientId) {
@@ -205,6 +215,7 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 				first_name: data?.first_name || '',
 				last_name: `${data?.first_last_name} ${data?.second_last_name}`  || '',
 			})
+			toast.success('Datos obtenidos de RENIEC');
 		}
 	}, [data, error]);
 
@@ -213,18 +224,21 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 		<div className="">
 			<Card className="mx-auto max-w-4xl bg-gray-50 dark:bg-gray-800">
 				<CardHeader className="bg-blue-300 dark:bg-blue-900 px-4 py-2 rounded-t-md">
-					<CardTitle>
+					<CardTitle className='m-0'>
 						<div className="flex items-center justify-between rounded-md">
-								{patientId ? 'Actualizar paciente' : 'Nuevo paciente'}
-								<Button variant="ghost" onClick={onClose}>
-									<X />
-								</Button>
+							{can('update_patients') || can('create_patients')
+								? (<div>{patientId ? 'Actualizar paciente' : 'Nuevo paciente'}</div>)
+								: (<div>Previsualización</div>)
+							}
+							<Button variant="ghost" onClick={onClose}>
+								<X />
+							</Button>
 						</div>
 					</CardTitle>
 					<CardDescription></CardDescription>
 				</CardHeader>
 				<CardContent className="p-2 lg:p-4">
-					<form onSubmit={handleSubmit} className="relative m-2 flex flex-col gap-4" autoComplete="off">
+					<form onSubmit={e => {e.preventDefault(); submit()}} className="relative m-2 flex flex-col gap-4" autoComplete="off">
 						<FieldGroup className="gap-3">
 							<div className="grid gap-3 lg:grid-cols-5">
 								{/* NHC */}
@@ -236,7 +250,7 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 										id="nhc"
 										name="nhc"
 										disabled
-										value={form.data.nhc}
+										value={form.data.nhc || ''}
 										placeholder="Autogenerado"
 									/>
 								</Field>
@@ -430,9 +444,11 @@ export default function PatientForm({ patientId, identities, onClose }: PatientF
 								>
 									<Printer /> HC clásica
 								</Button>
-								<Button type="submit" disabled={form.processing || !form.isDirty}>
-									<Save /> {patientId ? 'Actualizar' : 'Guardar'}
-								</Button>
+								{can('create_patients') && can('update_patients') && (
+									<Button type="submit" disabled={form.processing || !form.isDirty}>
+										<Save /> {patientId ? 'Actualizar' : 'Guardar'}
+									</Button>
+								)}
 							</div>
 						{(loading || reniecLoading) && (
 							<div className="absolute top-0 right-0 flex size-full items-center gap-6">

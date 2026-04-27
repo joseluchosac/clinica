@@ -23,8 +23,6 @@ interface Actions {
   data: any;
 }
 
-
-
 const breadcrumbs: BreadcrumbItem[] = [
   {
     title: 'Roles',
@@ -46,6 +44,7 @@ interface RoleFormProps {
   permissions: Permission[];
   rolePermissionsIds: number[] | undefined; // Array de IDs de permisos
 }
+
 export default function RoleForm({ ...props }: RoleFormProps) {
   const { role, permissions, rolePermissionsIds } = props;
   const [dialogConfirm, setDialogConfirm] = useState(dialogConfirmInit);

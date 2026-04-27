@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Autoincrement;
+use App\Models\Correlative;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -21,11 +21,9 @@ class DatabaseSeeder extends Seeder
             RoleUserSeeder::class,
         ]);
 
-
-
-        Autoincrement::create([
+        Correlative::create([
             'name' => 'next_nhc',
-            'value' => 1200000
+            'value' => 1
         ]);
     }
 }

@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('admin')
                 ->name('admin.')
                 ->group(base_path('routes/admin.php'));
+            Route::middleware('web', 'auth')
+                ->prefix('config')
+                ->name('config.')
+                ->group(base_path('routes/config.php'));
         }
     )
     ->withMiddleware(function (Middleware $middleware) {

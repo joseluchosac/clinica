@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PatientItem } from '@/types';
-import { CircleCheck, CircleX, EllipsisVertical, Pencil, Printer, Trash } from 'lucide-react';
+import { CircleCheck, CircleX, EllipsisVertical, Eye, Pencil, Printer, Trash } from 'lucide-react';
 import React, { Dispatch, SetStateAction } from 'react'
 
 interface MenuItemProps {
@@ -10,9 +10,10 @@ interface MenuItemProps {
   setMode: Dispatch<SetStateAction<string>>;
   handleDebug: (id: number | null, value: number) => void;
   handleDelete: (id: number | null) => void;
+  can: (permission: string) => boolean;
 }
 
-export default function MenuItem({setPatientId, patient, setMode, handleDebug, handleDelete }: MenuItemProps) {
+export default function MenuItem({setPatientId, patient, setMode, handleDebug, handleDelete, can }: MenuItemProps) {
 
   const imprimirHcClasica = (patientId: number | null) => {
     // Abrir el PDF en una nueva ventana/pestaña
@@ -54,7 +55,7 @@ export default function MenuItem({setPatientId, patient, setMode, handleDebug, h
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem
-          title="Eliminar"
+          title="Editar"
           onClick={() => {
             setTimeout(() => {
               // para espere el cerrado del dropdown
@@ -63,52 +64,50 @@ export default function MenuItem({setPatientId, patient, setMode, handleDebug, h
             }, 100);
           }}
         >
-          <Pencil /> Editar
+          {can('create_patients') || can('update_patients')
+            ? (<><Pencil /> Editar</>)
+            : (<><Eye /> Mostrar</>)
+          }
+          
+          
         </DropdownMenuItem>
-
-        {patient.debugged ? (
+        {can('debug_patients') && (
           <DropdownMenuItem
-            title="Depurar"
-            onClick={() => {
-              setTimeout(() => {
-                handleDebug(patient.id, 0);
-              }, 100);
-            }}
-          >
-            <CircleCheck /> No depurar
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem
-            title="Depurar"
-            onClick={() => {
-              setTimeout(() => {
-                handleDebug(patient.id, 1);
-              }, 100);
-            }}
-          >
-            <CircleX /> Depurar
+              title="Depurar"
+              onClick={() => {
+                setTimeout(() => {
+                  handleDebug(patient.id, patient.debugged ? 0 : 1);
+                }, 100);
+              }}
+            >
+              <CircleCheck /> {patient.debugged ? 'No depurar' : 'Depurar'}
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem
-          title="Eliminar"
-          onClick={() => {
-            setTimeout(() => { // para espere el cerrado del dropdown
-              handleDelete(patient.id);
-            }, 100);
-          }}
-        >
-          <Trash /> Eliminar
-        </DropdownMenuItem>
-        <DropdownMenuItem title="Imprimir HC clásica" onClick={() => imprimirHcClasica(patient.id)}>
-          <Printer /> HC clásica
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          title="Imprimir HC clásica"
-          onClick={() => imprimirHojaIdentificacion(patient.id)}
-        >
-          <Printer /> H. identificación
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled>API</DropdownMenuItem>
+        {can('delete_patients') && (
+          <DropdownMenuItem
+            title="Eliminar"
+            onClick={() => {
+              setTimeout(() => { // para espere el cerrado del dropdown
+                handleDelete(patient.id);
+              }, 100);
+            }}
+          >
+            <Trash /> Eliminar
+          </DropdownMenuItem>
+        )}
+        {can('print_patients') && (
+          <>
+            <DropdownMenuItem title="Imprimir HC clásica" onClick={() => imprimirHcClasica(patient.id)}>
+              <Printer /> HC clásica
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              title="Imprimir HC clásica"
+              onClick={() => imprimirHojaIdentificacion(patient.id)}
+            >
+              <Printer /> H. identificación
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

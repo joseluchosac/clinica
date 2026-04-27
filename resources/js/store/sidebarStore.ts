@@ -1,6 +1,6 @@
 // resources/js/store/sidebar.ts
 import { NavItem } from '@/types';
-import { LayoutGrid, UsersRound } from 'lucide-react';
+import { LayoutGrid, Settings, UsersRound } from 'lucide-react';
 import { create } from 'zustand';
 
 type SidebarState = {
@@ -77,6 +77,14 @@ const mainNavItemsInit: NavItem[] = [
       },
     ],
   },
+  {
+    title: 'Ajustes',
+    url: '/app-settings/correlative-nhc',
+    icon: Settings,
+    isActive: false,
+    isOpen: false,
+    can: ['update_app_settings'],
+  }
 ];
 const initialState = {
   mainNavItems: mainNavItemsInit,

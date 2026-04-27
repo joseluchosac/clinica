@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Autoincrement extends Model
+class Correlative extends Model
 {
     protected $fillable = [
         'name',

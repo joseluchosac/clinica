@@ -13,21 +13,25 @@ interface FilterProps {
   setOpenSearch: Dispatch<SetStateAction<boolean>>;
   formFilter: InertiaFormProps<SearchParamsPatients>;
   applyFilter: () => void;
-  resetFilter: () => void
+  resetFilter: () => void;
+  formFilterInit : SearchParamsPatients
 }
 
 
-export default function Filter({ openSearch, setOpenSearch, formFilter, applyFilter, resetFilter}: FilterProps) {
+export default function Filter({ openSearch, setOpenSearch, formFilter, applyFilter, resetFilter, formFilterInit}: FilterProps) {
+  const clearFormFilter = () => {
+    formFilter.setData(formFilterInit)
+  }
   return (
     <Sheet open={openSearch} onOpenChange={setOpenSearch}>
       <SheetTrigger asChild>
         <Button variant="outline" onClick={() => setOpenSearch(true)}>
-          <Search /> Filtros
+          <Search /> Buscar
         </Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Filtro de pacientes</SheetTitle>
+          <SheetTitle>Búsqueda de pacientes</SheetTitle>
           <SheetDescription></SheetDescription>
         </SheetHeader>
         <form onSubmit={(e) => { e.preventDefault(); applyFilter(); }} className="mt-4 flex flex-col gap-2">
@@ -123,10 +127,10 @@ export default function Filter({ openSearch, setOpenSearch, formFilter, applyFil
             </Field>
           </FieldGroup>
           <div className="mt-2 flex justify-center gap-4">
-            <Button type="button" variant="outline" onClick={resetFilter}>
+            <Button type="button" variant="outline" onClick={clearFormFilter}>
               Limpiar
             </Button>
-            <Button type="submit">Filtrar</Button>
+            <Button type="submit">Aplicar</Button>
           </div>
         </form>
       </SheetContent>

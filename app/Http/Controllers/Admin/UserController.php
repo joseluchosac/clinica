@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\In;
 use Inertia\Inertia;
 use Illuminate\Validation\Rules;
+use Spatie\Permission\Models\Role;
+
 class UserController extends Controller
 {
   /**
@@ -46,7 +48,8 @@ class UserController extends Controller
    */
   public function create()
   {
-    return Inertia::render('admin/users/user-form');
+    $roles = Role::all();
+    return Inertia::render('admin/users/user-form', compact('roles'));
   }
 
   /**
@@ -58,16 +61,18 @@ class UserController extends Controller
       'name' => 'required|string|max:255',
       'username' => 'required|string|max:255|unique:users',
       'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-      // 'password' => ['required', 'confirmed', Rules\Password::defaults()],
     ]);
 
-    User::create([
+    $user = User::create([
       'name' => $request->name,
       'username' => $request->username,
       'email' => $request->email,
-      // 'password' => Hash::make($request->password),
       'password' => Hash::make('12345678'),
     ]);
+
+    if ($request->has('rolesIds')) {
+      $user->syncRoles($request->rolesIds);
+    }
 
     session()->flash('resp', [
       "msg" => "Usuario creado con éxito",
@@ -75,6 +80,7 @@ class UserController extends Controller
       "action" => "storeUser",
       "data" => null
     ]);
+    
     return redirect()->route('admin.users.index');
   }
 
@@ -91,7 +97,9 @@ class UserController extends Controller
    */
   public function edit(User $user)
   {
-    return Inertia::render('admin/users/user-form', compact('user'));
+    $roles = Role::all();
+    $userRolesIds = $user->roles->pluck('id');
+    return Inertia::render('admin/users/user-form', compact('user', 'roles', 'userRolesIds'));
   }
 
   /**
@@ -106,6 +114,10 @@ class UserController extends Controller
     ]);
 
     $user->update($validated);
+
+    if ($request->has('rolesIds')) {
+      $user->syncRoles($request->rolesIds);
+    }
 
     session()->flash('resp', [
       "msg" => "Usuario actualizado con éxito",

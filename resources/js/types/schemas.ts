@@ -1,8 +1,8 @@
 import z from "zod";
 
 export const patientSchema = z.object({
-  id: z.number().optional(),
-  nhc: z.number().optional(),
+  id: z.number().nullable(),
+  nhc: z.number().nullable(),
   entry_at: z.string().optional(),
   identity_code: z.string().max(2),
   identity_number: z.string().min(1, { message: 'Nro documento es requerido' }),

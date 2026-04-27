@@ -116,7 +116,7 @@ class PatientController extends Controller
       // $patient = null;
       DB::transaction(function () use ($request, &$patient) {
         // Obtiene el contador siguiente y bloquea la fila correspondiente a "next_nhc"
-        $counter = DB::table('autoincrements')
+        $counter = DB::table('correlatives')
           ->where('name', 'next_nhc')
           ->lockForUpdate()
           ->first();
@@ -142,7 +142,7 @@ class PatientController extends Controller
           'phone' => $request->phone,
         ]);
         // Incrementar el contador
-        DB::table('autoincrements')
+        DB::table('correlatives')
           ->where('name', 'next_nhc')
           ->update(['value' => $counter->value + 1]);
       });
@@ -211,7 +211,7 @@ class PatientController extends Controller
   public function data(string $id)
   {
     // $patient = Patient::where('id', $id)->with(['locationAddress', 'locationBirth'])->get();
-    Gate::authorize('create_patients');
+    // Gate::authorize('create_patients');
     $patient = Patient::with(['locationAddress', 'locationBirth'])->find($id);
     // $patient->created_at = $patient->created_at->format('d/m/Y H:i');
     // $patient->updated_at = $patient->updated_at->format('d/m/Y H:i');
